@@ -1,11 +1,10 @@
 <!DOCTYPE html>
-<html lang="en" class="h-full bg-slate-50/50">
+<html lang="en" class="min-h-full bg-slate-50/50">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>COGS Pratiwi Restaurant - Kaura Bali</title>
 
-  <!-- Tailwind CSS -->
   <script src="https://cdn.tailwindcss.com"></script>
   <script>
     tailwind.config = {
@@ -52,11 +51,15 @@
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap');
     
+    html, body {
+      min-height: 100%;
+      overflow-x: hidden;
+    }
+
     body {
       font-family: 'Inter', sans-serif;
       -webkit-font-smoothing: antialiased;
       -webkit-tap-highlight-color: transparent;
-      contain: layout style;
     }
 
     input, select, textarea, button {
@@ -124,7 +127,7 @@
     }
   </style>
 </head>
-<body class="h-full text-slate-800 flex flex-col antialiased bg-slate-50/60 selection:bg-emerald-100 selection:text-emerald-900">
+<body class="min-h-screen text-slate-800 flex flex-col antialiased bg-slate-50/60 selection:bg-emerald-100 selection:text-emerald-900 overflow-y-auto">
 
   <!-- Toast Notification Container -->
   <div id="toastContainer" class="fixed bottom-4 right-4 left-4 sm:left-auto z-50 flex flex-col gap-2.5 max-w-sm w-full pointer-events-none no-print"></div>
@@ -544,7 +547,7 @@
         <button id="confirmCancelBtn" onclick="closeConfirmModal(false)" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-xl transition-colors">
           Cancel
         </button>
-        <button id="confirmActionButton" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl transition-colors">
+        <button id="confirmActionButton" onclick="closeConfirmModal(true)" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl transition-colors">
           Confirm
         </button>
       </div>
@@ -740,9 +743,9 @@
             <p class="text-[11px] text-emerald-800">Push to or pull existing recipes & Master Library from Google Sheets.</p>
           </div>
           <div class="flex flex-wrap items-center gap-2">
-            <button onclick="pullFromGoogleSheets()" class="px-3.5 py-2 bg-white hover:bg-slate-50 text-slate-800 border border-slate-200 font-bold rounded-xl shadow-xs transition-colors flex items-center space-x-1.5" title="Fetch existing recipes & Master Library from Google Sheets">
-              <i data-lucide="cloud-download" class="w-3.5 h-3.5 text-emerald-600"></i>
-              <span>Pull from Sheets</span>
+            <button id="btnPullSheetsModal" onclick="pullFromGoogleSheets()" class="px-3.5 py-2 bg-white hover:bg-slate-50 text-slate-800 border border-slate-200 font-bold rounded-xl shadow-xs transition-colors flex items-center space-x-1.5" title="Fetch existing recipes & Master Library from Google Sheets">
+              <i data-lucide="cloud-download" class="w-3.5 h-3.5 text-emerald-600 pull-icon"></i>
+              <span class="pull-text">Pull from Sheets</span>
             </button>
             <button onclick="syncCurrentRecipeToGoogleSheets(true)" class="px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl shadow-xs transition-colors flex items-center space-x-1.5">
               <i data-lucide="send" class="w-3.5 h-3.5"></i>
@@ -797,7 +800,7 @@ function doGet(e) {
     if (masterSheet) {
       var masterData = masterSheet.getDataRange().getValues();
       for (var i = 1; i < masterData.length; i++) {
-        var ingName = String(masterData[i][0]).trim();
+        var ingName = String(masterData[i][0] || '').trim();
         if (ingName) {
           masterLibrary[ingName] = {
             unit: String(masterData[i][1] || 'pcs'),
@@ -807,7 +810,7 @@ function doGet(e) {
       }
     }
     
-    // 2. Read Recipe Sheets
+    // 2. Read Recipe Sheets (Fast JSON metadata check)
     for (var s = 0; s < sheets.length; s++) {
       var sheet = sheets[s];
       if (sheet.getName() === "Master_Price_Library") continue;
@@ -822,67 +825,6 @@ function doGet(e) {
           }
         } catch(err) {}
       }
-      
-      // Fallback: Read visually from sheet summary rows if Z1 metadata is missing
-      var name = sheet.getRange(1, 1).getValue().toString().replace("Recipe: ", "").trim();
-      var desc = sheet.getRange(2, 1).getValue().toString().replace("Description: ", "").trim();
-      var currency = sheet.getRange(3, 1).getValue().toString().replace("Currency: ", "").trim() || "IDR";
-      if (!name) name = sheet.getName();
-      
-      var ingredients = [];
-      var qFactor = 10;
-      var targetFc = 0;
-      var servicePercent = 10;
-      var taxPercent = 11;
-      var priceMode = "gross";
-      var projectedPrice = 0;
-
-      var allValues = sheet.getDataRange().getValues();
-      for (var r = 0; r < allValues.length; r++) {
-        var label = String(allValues[r][0] || "").trim();
-        var val = allValues[r][5];
-        if (label.indexOf("Q-Factor %") === 0) {
-          qFactor = parseFloat(String(val).replace("%", "")) || 10;
-        } else if (label.indexOf("Target Food Cost %") === 0) {
-          targetFc = parseFloat(String(val).replace("%", "")) || 0;
-        } else if (label.indexOf("Service Charge %") === 0) {
-          servicePercent = parseFloat(String(val).replace("%", "")) || 10;
-        } else if (label.indexOf("Government Tax %") === 0) {
-          taxPercent = parseFloat(String(val).replace("%", "")) || 11;
-        } else if (label.indexOf("Price Mode") === 0) {
-          priceMode = String(val).toLowerCase().trim() || "gross";
-        } else if (label.indexOf("Actual Selling Price") === 0) {
-          projectedPrice = parseFloat(val) || 0;
-        }
-      }
-
-      if (allValues.length >= 6) {
-        for (var r = 5; r < allValues.length; r++) {
-          var row = allValues[r];
-          var ingName = String(row[1] || "").trim();
-          if (!ingName || ingName.indexOf("Subtotal") === 0) break;
-          ingredients.push({
-            name: ingName,
-            qty: Number(row[2]) || 0,
-            unit: String(row[3] || 'pcs'),
-            unitPrice: Number(row[4]) || 0
-          });
-        }
-      }
-      
-      recipes.push({
-        id: "rec_sheet_" + s + "_" + Date.now(),
-        name: name,
-        description: desc,
-        currency: currency,
-        qFactor: qFactor,
-        targetFc: targetFc,
-        servicePercent: servicePercent,
-        taxPercent: taxPercent,
-        priceMode: priceMode,
-        projectedPrice: projectedPrice,
-        ingredients: ingredients
-      });
     }
     
     return ContentService.createTextOutput(JSON.stringify({
@@ -1015,6 +957,7 @@ function doPost(e) {
 
   <script>
     let masterLibrary = {};
+    let isPullingData = false;
 
     const STANDARD_UNITS = [
       'pcs', 'kg', 'gr', 'L', 'ml', 'portion', 'slice', 
@@ -1052,7 +995,6 @@ function doPost(e) {
       GBP: { symbol: "£", rate: 0.000050, decimals: 2 }
     };
 
-    // Asynchronous Debounce utility to optimize rapid keystrokes & state saving
     function debounce(fn, delay = 300) {
       let timer = null;
       return function (...args) {
@@ -1061,7 +1003,6 @@ function doPost(e) {
       };
     }
 
-    // Cached LocalStorage save function
     const debouncedSaveLocalStorage = debounce(() => {
       saveLocalStorageDataImmediate();
     }, 300);
@@ -1118,13 +1059,6 @@ function doPost(e) {
       renderActiveRecipe();
       initChart();
       updateSheetsBadge();
-
-      const confirmBtn = document.getElementById('confirmActionButton');
-      if (confirmBtn) {
-        confirmBtn.addEventListener('click', () => {
-          closeConfirmModal(true);
-        });
-      }
 
       if (googleWebhookUrl) {
         pullFromGoogleSheets(true);
@@ -1559,7 +1493,7 @@ function doPost(e) {
           responsive: true,
           maintainAspectRatio: false,
           cutout: '68%',
-          animation: false, // Performance optimization
+          animation: false,
           plugins: {
             legend: { 
               position: 'bottom', 
@@ -1600,7 +1534,7 @@ function doPost(e) {
           '#ec4899', '#f59e0b', '#64748b', '#06b6d4'
         ];
       }
-      chartInstance.update('none'); // Update without canvas re-animation delay
+      chartInstance.update('none');
     }
 
     function openNewRecipeModal() {
@@ -1833,67 +1767,6 @@ function doPost(e) {
       closePasteExcelModal();
     }
 
-    async function saveAndSyncActiveRecipe() {
-      const recipe = getActiveRecipe();
-      saveLocalStorageDataImmediate();
-
-      if (recipe.ingredients && recipe.ingredients.length > 0) {
-        recipe.ingredients.forEach(ing => {
-          const name = String(ing.name || '').trim();
-          if (name) {
-            masterLibrary[name] = {
-              unit: ing.unit || 'pcs',
-              unitPrice: parseNumeric(ing.unitPrice)
-            };
-          }
-        });
-        saveLocalStorageDataImmediate();
-        updateMasterDatalist();
-      }
-
-      if (!googleWebhookUrl) {
-        showToast("Recipe Saved Locally", "Google Sheets not connected yet. Opening setup modal...", "info", 3500);
-        openGoogleSheetsModal();
-        return;
-      }
-
-      showToast(
-        "Syncing in Background...", 
-        `Saving "${recipe.name}" & pulling latest library from Google Sheets.`, 
-        "info", 
-        3000
-      );
-
-      const pushSuccess = await syncCurrentRecipeToGoogleSheets(false);
-
-      if (pushSuccess) {
-        const pullSuccess = await pullFromGoogleSheets(true);
-
-        if (pullSuccess) {
-          showToast(
-            "Sync & Auto-Pull Complete!", 
-            `"${recipe.name}" saved to Sheets & latest library pulled automatically!`, 
-            "success", 
-            4000
-          );
-        } else {
-          showToast(
-            "Recipe Saved to Sheets", 
-            `"${recipe.name}" pushed successfully, but auto-pull encountered a minor issue.`, 
-            "info", 
-            4000
-          );
-        }
-      } else {
-        showToast(
-          "Sync Error", 
-          "Failed to reach Google Sheets. Check your Webhook URL.", 
-          "error", 
-          4000
-        );
-      }
-    }
-
     function openGoogleSheetsModal() {
       const input = document.getElementById('googleWebhookUrlInput');
       if (input) input.value = googleWebhookUrl;
@@ -1906,6 +1779,9 @@ function doPost(e) {
 
     function saveGoogleSheetsConfig() {
       const input = document.getElementById('googleWebhookUrlInput')?.value.trim();
+      if (input && !input.endsWith('/exec')) {
+        showToast("URL Warning", "Google Web App URL should end with '/exec'. Make sure you copied the Web App URL, not the spreadsheet URL.", "error", 5000);
+      }
       googleWebhookUrl = input || "";
       saveLocalStorageDataImmediate();
       updateSheetsBadge();
@@ -2047,11 +1923,35 @@ function doPost(e) {
         return false;
       }
 
-      if (!silent) showToast("Pulling Data...", "Fetching saved recipes and Master Library from Google Sheets...", "info", 4000);
+      if (isPullingData) return false;
+      isPullingData = true;
+
+      const pullBtns = document.querySelectorAll('.pull-text');
+      pullBtns.forEach(b => b.textContent = "Pulling...");
+
+      if (!silent) showToast("Pulling Data...", "Fetching saved recipes from Google Sheets...", "info", 3000);
+
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 12000);
 
       try {
-        const response = await fetch(googleWebhookUrl, { method: 'GET' });
-        const data = await response.json();
+        const response = await fetch(googleWebhookUrl, { 
+          method: 'GET',
+          signal: controller.signal
+        });
+        clearTimeout(timeoutId);
+
+        const text = await response.text();
+
+        let data;
+        try {
+          data = JSON.parse(text);
+        } catch (jsonErr) {
+          if (text.trim().startsWith('<') || text.toLowerCase().includes('<!doctype html>')) {
+            throw new Error("Received HTML. Ensure Apps Script deployment 'Who has access' is set to 'Anyone' and URL ends with '/exec'.");
+          }
+          throw new Error("Invalid response format from Google Sheets: " + jsonErr.message);
+        }
 
         if (data.result === 'success') {
           let importedCount = 0;
@@ -2096,96 +1996,87 @@ function doPost(e) {
               "Pull Successful!",
               `Loaded ${importedCount} recipe(s) & Master Library items from Google Sheets.`,
               "success",
-              4000
+              3500
             );
           }
+          isPullingData = false;
+          pullBtns.forEach(b => b.textContent = "Pull from Sheets");
           return true;
         } else {
           if (!silent) showToast("Pull Error", "Failed to retrieve data: " + (data.error || "Unknown error"), "error", 4000);
+          isPullingData = false;
+          pullBtns.forEach(b => b.textContent = "Pull from Sheets");
           return false;
         }
       } catch(err) {
+        clearTimeout(timeoutId);
+        isPullingData = false;
+        pullBtns.forEach(b => b.textContent = "Pull from Sheets");
         console.error("Sheets pull error:", err);
-        if (!silent) showToast("Pull Error", "Could not fetch data. Verify Webhook URL & deployment access is set to 'Anyone'.", "error", 4000);
+        if (!silent) {
+          const msg = err.name === 'AbortError' ? 'Pull timed out. Please try again.' : (err.message || "Could not fetch data.");
+          showToast("Pull Error", msg, "error", 4000);
+        }
         return false;
       }
     }
 
-    function showToast(title, message, type = 'info', duration = 3500) {
-      const container = document.getElementById('toastContainer');
-      if (!container) return;
+    async function saveAndSyncActiveRecipe() {
+      const recipe = getActiveRecipe();
+      saveLocalStorageDataImmediate();
 
-      const toast = document.createElement('div');
-      
-      let bgColors = "bg-slate-900/95 border-slate-700 text-white shadow-2xl backdrop-blur-md";
-      let iconName = "info";
-      let iconColor = "text-blue-400";
-
-      if (type === 'success') {
-        bgColors = "bg-slate-900/95 border-emerald-500/50 text-white shadow-2xl backdrop-blur-md";
-        iconName = "check-circle-2";
-        iconColor = "text-emerald-400";
-      } else if (type === 'error') {
-        bgColors = "bg-slate-900/95 border-rose-500/50 text-white shadow-2xl backdrop-blur-md";
-        iconName = "alert-circle";
-        iconColor = "text-rose-400";
-      } else if (type === 'info') {
-        bgColors = "bg-slate-900/95 border-blue-500/50 text-white shadow-2xl backdrop-blur-md";
-        iconName = "info";
-        iconColor = "text-blue-400";
+      if (recipe.ingredients && recipe.ingredients.length > 0) {
+        recipe.ingredients.forEach(ing => {
+          const name = String(ing.name || '').trim();
+          if (name) {
+            masterLibrary[name] = {
+              unit: ing.unit || 'pcs',
+              unitPrice: parseNumeric(ing.unitPrice)
+            };
+          }
+        });
+        saveLocalStorageDataImmediate();
+        updateMasterDatalist();
       }
 
-      toast.className = `pointer-events-auto p-3.5 rounded-2xl border flex items-start space-x-3 transform transition-all duration-300 ease-out translate-y-2 opacity-0 ${bgColors}`;
+      if (!googleWebhookUrl) {
+        showToast("Recipe Saved Locally", "Google Sheets not connected yet. Opening setup modal...", "info", 3500);
+        openGoogleSheetsModal();
+        return;
+      }
 
-      toast.innerHTML = `
-        <div class="p-1 rounded-lg shrink-0 mt-0.5 ${iconColor}">
-          <i data-lucide="${iconName}" class="w-4 h-4"></i>
-        </div>
-        <div class="flex-1 min-w-0 pr-1">
-          <h4 class="text-xs font-bold leading-tight">${title}</h4>
-          <p class="text-[11px] text-slate-300 mt-0.5 leading-snug">${message}</p>
-        </div>
-        <button onclick="this.parentElement.remove()" class="text-slate-400 hover:text-slate-200 p-0.5 shrink-0">
-          <i data-lucide="x" class="w-3.5 h-3.5"></i>
-        </button>
-      `;
+      showToast(
+        "Syncing in Background...", 
+        `Saving "${recipe.name}" & updating Google Sheets in background.`, 
+        "info", 
+        2500
+      );
 
-      container.appendChild(toast);
-      if (window.lucide) lucide.createIcons();
-
-      requestAnimationFrame(() => {
-        toast.classList.remove('translate-y-2', 'opacity-0');
-        toast.classList.add('translate-y-0', 'opacity-100');
+      syncCurrentRecipeToGoogleSheets(false).then(pushSuccess => {
+        if (pushSuccess) {
+          showToast("Saved to Sheets", `"${recipe.name}" pushed successfully!`, "success", 3000);
+          pullFromGoogleSheets(true);
+        } else {
+          showToast("Sync Error", "Failed to reach Google Sheets. Check your Webhook URL.", "error", 4000);
+        }
       });
-
-      setTimeout(() => {
-        toast.classList.remove('translate-y-0', 'opacity-100');
-        toast.classList.add('translate-y-2', 'opacity-0');
-        setTimeout(() => {
-          toast.remove();
-        }, 300);
-      }, duration);
     }
 
     function showConfirmModal(title, msg, onConfirm, okOnly = false) {
-      const elTitle = document.getElementById('confirmTitle');
-      const elMsg = document.getElementById('confirmMessage');
-      if (elTitle) elTitle.textContent = title;
-      if (elMsg) elMsg.textContent = msg;
+      document.getElementById('confirmTitle').textContent = title;
+      document.getElementById('confirmMessage').textContent = msg;
       
       const confirmBtn = document.getElementById('confirmActionButton');
       const cancelBtn = document.getElementById('confirmCancelBtn');
 
-      if (confirmBtn) {
-        if (okOnly) {
-          confirmBtn.textContent = "OK";
-          confirmBtn.className = "px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl";
-          if (cancelBtn) cancelBtn.classList.add('hidden');
-        } else {
-          confirmBtn.textContent = "Confirm";
-          confirmBtn.className = "px-4 py-2 bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold rounded-xl";
-          if (cancelBtn) cancelBtn.classList.remove('hidden');
-        }
+      if (okOnly) {
+        confirmBtn.textContent = "OK";
+        confirmBtn.className = "px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl";
+        if (cancelBtn) cancelBtn.classList.add('hidden');
+      } else {
+        confirmBtn.textContent = "Confirm";
+        confirmBtn.className = "px-4 py-2 bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold rounded-xl";
+        if (cancelBtn) cancelBtn.classList.remove('hidden');
       }
 
       pendingConfirmAction = onConfirm;
@@ -2214,21 +2105,21 @@ function doPost(e) {
       const recipe = getActiveRecipe();
 
       const subtotal = recipe.ingredients.reduce((s, i) => s + (parseNumeric(i.qty) * parseNumeric(i.unitPrice)), 0);
-      const qFactorCost = subtotal * (recipe.qFactor / 100);
+      const qFactorCost = subtotal * (parseNumeric(recipe.qFactor) / 100);
       const totalFoodCost = subtotal + qFactorCost;
       const preliminaryPriceNet = recipe.targetFc > 0 ? (totalFoodCost / (recipe.targetFc / 100)) : 0;
       
-      const taxSvcMultiplier = (1 + ((recipe.servicePercent || 0) / 100)) * (1 + ((recipe.taxPercent || 0) / 100));
+      const taxSvcMultiplier = (1 + ((parseNumeric(recipe.servicePercent) || 0) / 100)) * (1 + ((parseNumeric(recipe.taxPercent) || 0) / 100));
       const preliminaryPriceGross = preliminaryPriceNet * taxSvcMultiplier;
 
       let actualNetPrice = 0;
       let actualGrossPrice = 0;
       if (recipe.priceMode === 'gross') {
-        actualGrossPrice = recipe.projectedPrice;
-        actualNetPrice = taxSvcMultiplier > 0 ? (recipe.projectedPrice / taxSvcMultiplier) : recipe.projectedPrice;
+        actualGrossPrice = parseNumeric(recipe.projectedPrice);
+        actualNetPrice = taxSvcMultiplier > 0 ? (actualGrossPrice / taxSvcMultiplier) : actualGrossPrice;
       } else {
-        actualNetPrice = recipe.projectedPrice;
-        actualGrossPrice = recipe.projectedPrice * taxSvcMultiplier;
+        actualNetPrice = parseNumeric(recipe.projectedPrice);
+        actualGrossPrice = actualNetPrice * taxSvcMultiplier;
       }
 
       const actualFcPct = actualNetPrice > 0 ? ((totalFoodCost / actualNetPrice) * 100) : 0;
@@ -2257,7 +2148,7 @@ function doPost(e) {
         [`Government Tax (${recipe.taxPercent}%):`, "", "", "", "", (preliminaryPriceNet * (1 + recipe.servicePercent / 100)) * (recipe.taxPercent / 100)],
         ["Recommended Selling Price (Gross Inc. Tax/Svc):", "", "", "", "", preliminaryPriceGross],
         [],
-        [`Actual Menu Price (${recipe.priceMode.toUpperCase()}):`, "", "", "", "", recipe.projectedPrice],
+        [`Actual Menu Price (${(recipe.priceMode || 'gross').toUpperCase()}):`, "", "", "", "", recipe.projectedPrice],
         ["Actual Net Sales Revenue:", "", "", "", "", actualNetPrice],
         ["Actual Gross Customer Price:", "", "", "", "", actualGrossPrice],
         ["Actual Food Cost % (on Net Revenue):", "", "", "", "", actualFcPct.toFixed(2) + "%"],
@@ -2303,7 +2194,6 @@ function doPost(e) {
             activeRecipeId = recipes[0].id;
 
             saveLocalStorageDataImmediate();
-            updateMasterDatalist();
             populateRecipeDropdown();
             renderActiveRecipe();
             showConfirmModal("Import Successful", "Your recipes and library were successfully restored!", null, true);
@@ -2315,6 +2205,47 @@ function doPost(e) {
         }
       };
       reader.readAsText(file);
+    }
+
+    function showToast(title, message, type = 'info', duration = 3500) {
+      const container = document.getElementById('toastContainer');
+      if (!container) return;
+
+      const toast = document.createElement('div');
+      toast.className = `pointer-events-auto flex items-start space-x-3 p-3.5 rounded-2xl border shadow-xl transition-all transform translate-y-2 opacity-0 duration-200 ${
+        type === 'success' 
+          ? 'bg-emerald-900/95 text-white border-emerald-700' 
+          : type === 'error'
+          ? 'bg-rose-900/95 text-white border-rose-700'
+          : 'bg-slate-900/95 text-white border-slate-700'
+      }`;
+
+      const iconName = type === 'success' ? 'check-circle' : type === 'error' ? 'alert-triangle' : 'info';
+      
+      toast.innerHTML = `
+        <div class="shrink-0 mt-0.5">
+          <i data-lucide="${iconName}" class="w-4 h-4 ${type === 'success' ? 'text-emerald-400' : type === 'error' ? 'text-rose-400' : 'text-blue-400'}"></i>
+        </div>
+        <div class="flex-1 space-y-0.5">
+          <h4 class="text-xs font-bold leading-tight">${title}</h4>
+          <p class="text-[11px] text-slate-300 leading-normal">${message}</p>
+        </div>
+        <button onclick="this.parentElement.remove()" class="shrink-0 text-slate-400 hover:text-white p-0.5">
+          <i data-lucide="x" class="w-3.5 h-3.5"></i>
+        </button>
+      `;
+
+      container.appendChild(toast);
+      if (window.lucide) lucide.createIcons();
+
+      requestAnimationFrame(() => {
+        toast.classList.remove('translate-y-2', 'opacity-0');
+      });
+
+      setTimeout(() => {
+        toast.classList.add('opacity-0', 'translate-y-2');
+        setTimeout(() => toast.remove(), 200);
+      }, duration);
     }
   </script>
 </body>
