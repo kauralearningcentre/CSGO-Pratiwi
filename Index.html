@@ -1,1 +1,2211 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full bg-slate-50/50">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>COGS Pratiwi Restaurant - Kaura Bali</title>
 
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'system-ui', 'sans-serif'],
+            mono: ['JetBrains Mono', 'Fira Code', 'monospace'],
+          },
+          colors: {
+            emerald: {
+              50: '#ecfdf5',
+              100: '#d1fae5',
+              200: '#a7f3d0',
+              300: '#6ee7b7',
+              400: '#34d399',
+              500: '#10b981',
+              600: '#059669',
+              700: '#047857',
+              800: '#065f46',
+              900: '#064e3b',
+              950: '#022c22',
+            }
+          },
+          boxShadow: {
+            'card': '0 1px 3px 0 rgb(0 0 0 / 0.05), 0 1px 2px -1px rgb(0 0 0 / 0.05)',
+            'card-hover': '0 10px 25px -5px rgb(0 0 0 / 0.05), 0 8px 10px -6px rgb(0 0 0 / 0.01)',
+            'glow': '0 0 20px -5px rgba(16, 185, 129, 0.25)',
+          }
+        }
+      }
+    }
+  </script>
+
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <!-- SheetJS (xlsx) -->
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap');
+    
+    body {
+      font-family: 'Inter', sans-serif;
+      -webkit-font-smoothing: antialiased;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    input, select, textarea, button {
+      transition: all 0.15s ease-in-out;
+    }
+
+    @media (max-width: 640px) {
+      input[type="text"], input[type="number"], select {
+        font-size: 13px !important;
+      }
+    }
+
+    .table-input {
+      background-color: transparent;
+      border: 1px solid transparent;
+      transition: all 0.15s ease;
+    }
+    .table-input:hover {
+      background-color: #f8fafc;
+      border-color: #e2e8f0;
+    }
+    .table-input:focus {
+      background-color: #ffffff;
+      border-color: #10b981;
+      box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.15);
+      outline: none;
+    }
+
+    @media print {
+      body {
+        background: #ffffff !important;
+        color: #0f172a !important;
+      }
+      .no-print {
+        display: none !important;
+      }
+      .print-only {
+        display: block !important;
+      }
+      .print-card {
+        border: 1px solid #e2e8f0 !important;
+        box-shadow: none !important;
+        background: #ffffff !important;
+        color: #0f172a !important;
+      }
+      @page {
+        margin: 12mm;
+        size: A4 portrait;
+      }
+    }
+
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #f1f5f9;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #cbd5e1;
+      border-radius: 9999px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #10b981;
+    }
+  </style>
+</head>
+<body class="h-full text-slate-800 flex flex-col antialiased bg-slate-50/60 selection:bg-emerald-100 selection:text-emerald-900">
+
+  <!-- Toast Notification Container -->
+  <div id="toastContainer" class="fixed bottom-4 right-4 left-4 sm:left-auto z-50 flex flex-col gap-2.5 max-w-sm w-full pointer-events-none no-print"></div>
+
+  <!-- Master Library Autocomplete Datalist -->
+  <datalist id="masterIngredientsList"></datalist>
+
+  <header class="bg-white/90 backdrop-blur-md border-b border-slate-200/80 sticky top-0 z-40 no-print shadow-xs">
+    <div class="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-2.5 sm:py-0 sm:h-16 flex flex-col sm:flex-row items-center justify-between gap-2.5 sm:gap-4">
+      
+      <!-- Logo & Title -->
+      <div class="flex items-center space-x-3 w-full sm:w-auto justify-between sm:justify-start">
+        <div class="flex items-center space-x-2.5">
+          <div class="p-2 sm:p-2.5 bg-gradient-to-tr from-emerald-700 to-emerald-500 text-white rounded-xl shadow-md shadow-emerald-600/20 ring-1 ring-white/20 shrink-0">
+            <i data-lucide="utensils" class="w-4 h-4 sm:w-5 sm:h-5"></i>
+          </div>
+          <div>
+            <div class="flex items-center space-x-1.5">
+              <h1 class="text-sm sm:text-lg font-extrabold text-slate-900 tracking-tight leading-none">COGS Pratiwi Restaurant</h1>
+              <span class="px-1.5 py-0.5 text-[9px] sm:text-[10px] font-bold bg-emerald-100 text-emerald-800 rounded border border-emerald-200">v2.1</span>
+            </div>
+            <p class="text-[10px] sm:text-[11px] text-slate-500 font-medium mt-0.5">Kaura Bali - Food Costing Studio</p>
+          </div>
+        </div>
+
+        <!-- Mobile Currency Quick Select -->
+        <div class="flex sm:hidden items-center bg-slate-100/90 border border-slate-200 rounded-lg px-2 py-1">
+          <select id="currencySelectMobile" onchange="changeCurrency(this.value)" class="bg-transparent text-[11px] font-bold text-slate-700 focus:outline-none cursor-pointer">
+            <option value="IDR">IDR (Rp)</option>
+            <option value="USD">USD ($)</option>
+            <option value="EUR">EUR (€)</option>
+            <option value="GBP">GBP (£)</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Header Tools & Actions -->
+      <div class="flex items-center justify-start sm:justify-end space-x-1.5 sm:space-x-2.5 w-full sm:w-auto overflow-x-auto pb-1 sm:pb-0 scrollbar-none">
+        
+        <!-- Currency Selector (Desktop) -->
+        <div class="hidden sm:flex items-center bg-slate-100/80 hover:bg-slate-100 border border-slate-200/90 rounded-xl px-2.5 py-1.5 focus-within:ring-2 focus-within:ring-emerald-500/20 transition-all shrink-0">
+          <i data-lucide="coins" class="w-3.5 h-3.5 text-emerald-600 mr-1.5 shrink-0"></i>
+          <select id="currencySelect" onchange="changeCurrency(this.value)" class="bg-transparent text-xs font-semibold text-slate-700 focus:outline-none cursor-pointer pr-1">
+            <option value="IDR" selected>IDR (Rp)</option>
+            <option value="USD">USD ($)</option>
+            <option value="EUR">EUR (€)</option>
+            <option value="GBP">GBP (£)</option>
+          </select>
+        </div>
+
+        <!-- Unified Save & Sync Button -->
+        <div class="inline-flex rounded-xl shadow-md shadow-emerald-600/25 ring-1 ring-emerald-500/30 overflow-hidden bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-500 shrink-0">
+          <button onclick="saveAndSyncActiveRecipe()" class="px-2.5 sm:px-3.5 py-1.5 text-white text-[11px] sm:text-xs font-black transition-all flex items-center space-x-1 sm:space-x-1.5 active:scale-95 hover:bg-white/10" title="Save recipe & sync to Google Sheets">
+            <i data-lucide="cloud-upload" class="w-3.5 h-3.5 sm:w-4 sm:h-4"></i>
+            <span>Save & Sync</span>
+            <span id="gsSyncBadge" class="w-2 h-2 rounded-full bg-amber-300 ring-2 ring-white/80 shrink-0 ml-0.5"></span>
+          </button>
+          <button onclick="openGoogleSheetsModal()" class="px-1.5 sm:px-2 py-1.5 text-emerald-100 hover:text-white hover:bg-white/20 border-l border-emerald-400/30 transition-all flex items-center justify-center" title="Google Sheets Setup">
+            <i data-lucide="settings" class="w-3.5 h-3.5"></i>
+          </button>
+        </div>
+
+        <!-- Master Price Library Modal Button -->
+        <button onclick="openMasterModal()" class="px-2.5 sm:px-3 py-1.5 bg-white hover:bg-slate-50 text-slate-700 text-[11px] sm:text-xs font-semibold rounded-xl transition-all border border-slate-200 shadow-xs flex items-center space-x-1 shrink-0">
+          <i data-lucide="database" class="w-3.5 h-3.5 sm:w-4 sm:h-4 text-emerald-600"></i>
+          <span class="whitespace-nowrap">Master Library</span>
+        </button>
+
+        <!-- Reset Blank Button -->
+        <button onclick="confirmResetAll()" class="p-1.5 sm:px-3 sm:py-1.5 bg-slate-100 hover:bg-rose-50 text-slate-600 hover:text-rose-700 text-[11px] sm:text-xs font-medium rounded-xl transition-all border border-slate-200 flex items-center space-x-1 shrink-0" title="Reset all data">
+          <i data-lucide="rotate-ccw" class="w-3.5 h-3.5"></i>
+          <span class="hidden md:inline">Reset</span>
+        </button>
+
+        <!-- Export Menu Dropdown -->
+        <div class="relative inline-block text-left shrink-0">
+          <button id="exportDropdownBtn" onclick="toggleExportMenu()" class="px-2.5 sm:px-3 py-1.5 bg-slate-800 hover:bg-slate-900 text-white text-[11px] sm:text-xs font-bold rounded-xl transition-all flex items-center space-x-1 shadow-xs active:scale-95">
+            <i data-lucide="download" class="w-3.5 h-3.5 sm:w-4 sm:h-4"></i>
+            <span>Export</span>
+            <i data-lucide="chevron-down" class="w-3 h-3 ml-0.5"></i>
+          </button>
+          
+          <div id="exportMenu" class="hidden absolute right-0 mt-2 w-56 bg-white border border-slate-200/90 rounded-2xl shadow-xl z-50 py-1.5 no-print divide-y divide-slate-100 animate-in fade-in slide-in-from-top-2 duration-150">
+            <div class="py-1">
+              <button onclick="syncCurrentRecipeToGoogleSheets()" class="w-full text-left px-4 py-2 text-xs font-medium text-slate-700 hover:bg-emerald-50 hover:text-emerald-700 flex items-center space-x-2.5 transition-colors">
+                <i data-lucide="send" class="w-4 h-4 text-emerald-600"></i>
+                <span>Push Active to Sheets</span>
+              </button>
+              <button onclick="pullFromGoogleSheets()" class="w-full text-left px-4 py-2 text-xs font-medium text-slate-700 hover:bg-emerald-50 hover:text-emerald-700 flex items-center space-x-2.5 transition-colors">
+                <i data-lucide="cloud-download" class="w-4 h-4 text-emerald-600"></i>
+                <span>Pull / Load from Sheets</span>
+              </button>
+              <button onclick="exportToPDF()" class="w-full text-left px-4 py-2 text-xs font-medium text-slate-700 hover:bg-emerald-50 hover:text-emerald-700 flex items-center space-x-2.5 transition-colors">
+                <i data-lucide="printer" class="w-4 h-4 text-emerald-600"></i>
+                <span>Print / Save as PDF</span>
+              </button>
+              <button onclick="exportToExcel()" class="w-full text-left px-4 py-2 text-xs font-medium text-slate-700 hover:bg-emerald-50 hover:text-emerald-700 flex items-center space-x-2.5 transition-colors">
+                <i data-lucide="file-spreadsheet" class="w-4 h-4 text-emerald-600"></i>
+                <span>Export Excel (.xlsx)</span>
+              </button>
+            </div>
+            <div class="py-1">
+              <button onclick="exportToJSON()" class="w-full text-left px-4 py-2 text-xs font-medium text-slate-700 hover:bg-emerald-50 hover:text-emerald-700 flex items-center space-x-2.5 transition-colors">
+                <i data-lucide="file-json" class="w-4 h-4 text-emerald-600"></i>
+                <span>Backup JSON Data</span>
+              </button>
+              <label class="w-full text-left px-4 py-2 text-xs font-medium text-slate-700 hover:bg-emerald-50 hover:text-emerald-700 flex items-center space-x-2.5 transition-colors cursor-pointer">
+                <i data-lucide="upload-cloud" class="w-4 h-4 text-emerald-600"></i>
+                <span>Restore JSON Backup</span>
+                <input type="file" id="importJsonInput" onchange="importFromJSON(event)" class="hidden" accept=".json">
+              </label>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </header>
+
+  <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
+
+    <!-- Formatting Tip Banner -->
+    <div class="bg-gradient-to-r from-emerald-50 via-teal-50 to-emerald-50/50 border border-emerald-200/80 rounded-2xl p-4 flex items-center justify-between shadow-xs no-print gap-3">
+      <div class="flex items-start space-x-3">
+        <div class="p-2 bg-emerald-600 text-white rounded-xl shrink-0 mt-0.5 shadow-sm">
+          <i data-lucide="sparkles" class="w-4 h-4"></i>
+        </div>
+        <div class="text-xs text-slate-700 space-y-0.5">
+          <p class="font-bold text-emerald-950 flex items-center space-x-1.5">
+            <span>Pro Tip: Ingredient Autocomplete & Formatting</span>
+          </p>
+          <p class="text-slate-600">
+            Type an ingredient name to auto-fill prices from your <strong class="text-emerald-900">Master Price Library</strong>! Use dot (<span class="font-mono font-bold text-slate-900 bg-white/80 px-1.5 py-0.5 rounded border border-emerald-200">.</span>) or comma (<span class="font-mono font-bold text-slate-900 bg-white/80 px-1.5 py-0.5 rounded border border-emerald-200">,</span>) for decimal quantities.
+          </p>
+        </div>
+      </div>
+      <button onclick="this.parentElement.remove()" class="text-slate-400 hover:text-slate-600 p-1 shrink-0 rounded-lg hover:bg-white/50">
+        <i data-lucide="x" class="w-4 h-4"></i>
+      </button>
+    </div>
+
+    <!-- Recipe Header & Selector Card -->
+    <div class="bg-white border border-slate-200/90 rounded-2xl p-5 shadow-sm print-card">
+      <div class="flex flex-col md:flex-row md:items-center justify-between gap-5">
+        
+        <!-- Editable Recipe Name & Description -->
+        <div class="flex-1 space-y-1.5">
+          <div class="flex items-center space-x-2">
+            <span class="inline-flex items-center space-x-1 px-2.5 py-0.5 text-[10px] font-extrabold uppercase tracking-wider bg-emerald-100/80 text-emerald-800 border border-emerald-200/80 rounded-full no-print">
+              <span class="w-1.5 h-1.5 rounded-full bg-emerald-600 animate-pulse"></span>
+              <span>Active Recipe Card</span>
+            </span>
+            <span class="text-xs text-slate-400 font-medium">Standard Yield Costing Sheet</span>
+          </div>
+          
+          <div class="space-y-1">
+            <div class="flex items-center space-x-2 group">
+              <input type="text" id="recipeTitleInput" oninput="updateRecipeTitle(this.value)" placeholder="Enter Recipe Name..." 
+                class="text-xl sm:text-2xl font-black text-slate-900 bg-transparent border-b-2 border-transparent hover:border-slate-300 focus:border-emerald-600 focus:bg-slate-50/80 rounded px-1.5 py-0.5 w-full transition-all focus:outline-none placeholder:text-slate-300">
+              <i data-lucide="edit-3" class="w-4 h-4 text-slate-300 group-hover:text-slate-500 shrink-0 no-print transition-colors" title="Click to edit recipe title"></i>
+            </div>
+            
+            <input type="text" id="recipeDescInput" oninput="updateRecipeDesc(this.value)" placeholder="Add recipe description, yield, or portion notes..." 
+              class="text-xs text-slate-500 bg-transparent border-b border-transparent hover:border-slate-200 focus:border-emerald-500 focus:bg-slate-50/80 rounded px-1.5 py-0.5 w-full transition-all focus:outline-none placeholder:text-slate-400">
+          </div>
+        </div>
+
+        <!-- Recipe Selector Toolbar -->
+        <div class="flex flex-wrap items-center gap-2 no-print shrink-0 bg-slate-50 p-2 rounded-2xl border border-slate-200/70">
+          <div class="relative min-w-[180px]">
+            <select id="recipeSelect" onchange="switchRecipe(this.value)" class="w-full bg-white border border-slate-200 text-slate-800 font-bold text-xs rounded-xl px-3 py-2 focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 shadow-xs cursor-pointer">
+              <!-- Dynamically populated -->
+            </select>
+          </div>
+          <button onclick="saveAndSyncActiveRecipe()" class="px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs rounded-xl transition-all shadow-xs flex items-center space-x-1.5" title="Save changes and sync to Google Sheets">
+            <i data-lucide="save" class="w-4 h-4"></i>
+            <span>Save & Sync</span>
+          </button>
+          <button onclick="openNewRecipeModal()" class="p-2 bg-white hover:bg-slate-100 text-slate-700 rounded-xl transition-all border border-slate-200 shadow-xs" title="Create New Recipe">
+            <i data-lucide="plus" class="w-4 h-4 text-emerald-600"></i>
+          </button>
+          <button onclick="duplicateActiveRecipe()" class="p-2 bg-white hover:bg-slate-100 text-slate-700 rounded-xl transition-all border border-slate-200 shadow-xs" title="Duplicate Recipe">
+            <i data-lucide="copy" class="w-4 h-4"></i>
+          </button>
+          <button onclick="confirmDeleteRecipe()" class="p-2 bg-white hover:bg-rose-50 text-slate-500 hover:text-rose-600 border border-slate-200 hover:border-rose-200 rounded-xl transition-all shadow-xs" title="Delete Recipe">
+            <i data-lucide="trash-2" class="w-4 h-4"></i>
+          </button>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- Financial Scorecards -->
+    <div class="grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-4">
+      
+      <!-- Recommended Selling Price Card -->
+      <div class="bg-gradient-to-br from-blue-50/50 via-white to-white border border-blue-100 rounded-2xl p-3 sm:p-4 shadow-xs print-card hover:border-blue-300 transition-all group">
+        <div class="flex justify-between items-start">
+          <span class="text-[10px] sm:text-[11px] font-extrabold text-blue-900/70 uppercase tracking-wider">Target Price</span>
+          <span class="p-1.5 sm:p-2 bg-blue-100/70 text-blue-600 rounded-lg sm:rounded-xl group-hover:scale-110 transition-transform no-print">
+            <i data-lucide="target" class="w-3.5 h-3.5 sm:w-4 sm:h-4"></i>
+          </span>
+        </div>
+        <div id="cardPreliminaryPrice" class="text-base sm:text-2xl font-black text-blue-700 mt-1 sm:mt-2 font-mono tracking-tight truncate">Rp 0</div>
+        <div class="flex flex-col mt-1.5 sm:mt-2 pt-1.5 sm:pt-2 border-t border-blue-100/80 space-y-0.5 text-[10px] sm:text-[11px] text-slate-500">
+          <p id="cardTargetGrossDisplay" class="font-medium text-slate-700 truncate">Gross: <span id="targetGrossVal" class="font-bold text-blue-800 font-mono">Rp 0</span></p>
+          <p class="text-[9px] sm:text-[10px] text-slate-400 hidden sm:block">Calculated to hit Target FC %</p>
+        </div>
+      </div>
+
+      <!-- Total Food Cost Card -->
+      <div class="bg-gradient-to-br from-emerald-50/50 via-white to-white border border-emerald-100 rounded-2xl p-3 sm:p-4 shadow-xs print-card hover:border-emerald-300 transition-all group">
+        <div class="flex justify-between items-start">
+          <span class="text-[10px] sm:text-[11px] font-extrabold text-emerald-900/70 uppercase tracking-wider">Food Cost</span>
+          <span class="p-1.5 sm:p-2 bg-emerald-100/70 text-emerald-600 rounded-lg sm:rounded-xl group-hover:scale-110 transition-transform no-print">
+            <i data-lucide="shopping-bag" class="w-3.5 h-3.5 sm:w-4 sm:h-4"></i>
+          </span>
+        </div>
+        <div id="cardTotalFoodCost" class="text-base sm:text-2xl font-black text-slate-900 mt-1 sm:mt-2 font-mono tracking-tight truncate">Rp 0</div>
+        <div class="flex flex-col mt-1.5 sm:mt-2 pt-1.5 sm:pt-2 border-t border-emerald-100/80 space-y-0.5 text-[10px] sm:text-[11px] text-slate-500">
+          <p class="font-medium text-slate-700 truncate">Subtotal + Q-Factor</p>
+          <p class="text-[9px] sm:text-[10px] text-slate-400 hidden sm:block">Cost per portion yield</p>
+        </div>
+      </div>
+
+      <!-- Actual Food Cost % Card -->
+      <div class="bg-white border border-slate-200/90 rounded-2xl p-3 sm:p-4 shadow-xs print-card hover:border-slate-300 transition-all group">
+        <div class="flex justify-between items-start">
+          <span class="text-[10px] sm:text-[11px] font-extrabold text-slate-500 uppercase tracking-wider">Actual FC %</span>
+          <span id="fcBadge" class="px-1.5 py-0.5 text-[9px] sm:text-[10px] font-black rounded-full bg-slate-100 text-slate-600 border border-slate-200">
+            N/A
+          </span>
+        </div>
+        <div id="cardActualFC" class="text-base sm:text-2xl font-black text-slate-900 mt-1 sm:mt-2 font-mono tracking-tight">0.0%</div>
+        <div class="flex flex-col mt-1.5 sm:mt-2 pt-1.5 sm:pt-2 border-t border-slate-100 space-y-0.5 text-[10px] sm:text-[11px] text-slate-500">
+          <p id="cardFCDiff" class="font-medium text-slate-700 truncate">Target: 0%</p>
+          <p class="text-[9px] sm:text-[10px] text-slate-400 hidden sm:block">Based on actual price</p>
+        </div>
+      </div>
+
+      <!-- Gross Profit Margin Card -->
+      <div class="bg-gradient-to-br from-purple-50/50 via-white to-white border border-purple-100 rounded-2xl p-3 sm:p-4 shadow-xs print-card hover:border-purple-300 transition-all group">
+        <div class="flex justify-between items-start">
+          <span class="text-[10px] sm:text-[11px] font-extrabold text-purple-900/70 uppercase tracking-wider">Gross Margin</span>
+          <span class="p-1.5 sm:p-2 bg-purple-100/70 text-purple-600 rounded-lg sm:rounded-xl group-hover:scale-110 transition-transform no-print">
+            <i data-lucide="trending-up" class="w-3.5 h-3.5 sm:w-4 sm:h-4"></i>
+          </span>
+        </div>
+        <div id="cardGrossMargin" class="text-base sm:text-2xl font-black text-purple-700 mt-1 sm:mt-2 font-mono tracking-tight truncate">Rp 0</div>
+        <div class="flex flex-col mt-1.5 sm:mt-2 pt-1.5 sm:pt-2 border-t border-purple-100/80 space-y-0.5 text-[10px] sm:text-[11px] text-slate-500">
+          <p id="cardMarginPercent" class="font-medium text-slate-700 truncate">Net Margin: 0%</p>
+          <p class="text-[9px] sm:text-[10px] text-slate-400 hidden sm:block">Profit before overhead</p>
+        </div>
+      </div>
+
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+      <!-- Left Column: Ingredients Table Card -->
+      <div class="lg:col-span-2 space-y-4">
+        <div class="bg-white border border-slate-200/90 rounded-2xl p-3.5 sm:p-5 shadow-sm space-y-3.5 sm:space-y-4 print-card">
+          
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between border-b border-slate-100 pb-3 gap-2.5">
+            <div>
+              <h2 class="font-bold text-slate-900 text-sm sm:text-base flex items-center space-x-2">
+                <i data-lucide="list-checks" class="w-4 h-4 sm:w-5 sm:h-5 text-emerald-600 no-print"></i>
+                <span>Ingredients & Raw Materials</span>
+              </h2>
+              <p class="text-[11px] sm:text-xs text-slate-500">Specify quantities and prices per single serving yield.</p>
+            </div>
+
+            <div class="flex items-center space-x-2 no-print shrink-0 justify-end">
+              <button onclick="openPasteExcelModal()" class="px-2.5 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-xl transition-all border border-slate-200 flex items-center space-x-1.5" title="Paste rows copied directly from Excel">
+                <i data-lucide="clipboard-paste" class="w-3.5 h-3.5 text-emerald-600"></i>
+                <span class="hidden xs:inline">Paste Excel</span>
+              </button>
+              <button onclick="addIngredientRow()" class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl transition-all shadow-xs flex items-center space-x-1">
+                <i data-lucide="plus" class="w-4 h-4"></i>
+                <span>Add Row</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Ingredients Table -->
+          <div class="overflow-x-auto -mx-3.5 sm:mx-0 px-3.5 sm:px-0 touch-pan-x">
+            <table class="w-full text-left text-xs border-collapse min-w-[580px]">
+              <thead>
+                <tr class="bg-slate-50/80 text-slate-500 uppercase text-[10px] font-bold tracking-wider border-y border-slate-200/80">
+                  <th class="py-2.5 px-2 text-center w-8">#</th>
+                  <th class="py-2.5 px-3 min-w-[150px]">Ingredient Name</th>
+                  <th class="py-2.5 px-2 w-20">Qty</th>
+                  <th class="py-2.5 px-2 w-24">Unit</th>
+                  <th class="py-2.5 px-3 w-28">Unit Price</th>
+                  <th class="py-2.5 px-3 w-28 text-right">Line Total</th>
+                  <th class="py-2.5 px-2 text-center w-9 no-print"></th>
+                </tr>
+              </thead>
+              <tbody id="ingredientsTableBody" class="divide-y divide-slate-100 text-slate-800">
+                <!-- Dynamically populated rows -->
+              </tbody>
+              <tfoot class="bg-slate-50/80 font-bold border-t-2 border-slate-200">
+                <tr>
+                  <td colspan="5" class="py-3 px-3 text-right text-slate-600 uppercase text-[10px] sm:text-[11px] tracking-wider">Subtotal Ingredients Cost:</td>
+                  <td id="tableSubtotal" class="py-3 px-3 text-right font-mono text-emerald-700 text-xs sm:text-sm font-black">Rp 0</td>
+                  <td class="no-print"></td>
+                </tr>
+              </tfoot>
+            </table>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- Right Column: Costing Parameters & Visual Chart -->
+      <div class="space-y-6">
+
+        <!-- Costing Controls Box -->
+        <div class="bg-white border border-slate-200/90 rounded-2xl p-5 shadow-sm space-y-4 print-card">
+          <h3 class="font-bold text-slate-800 text-sm border-b border-slate-100 pb-3 flex items-center space-x-2">
+            <i data-lucide="sliders" class="w-4 h-4 text-emerald-600 no-print"></i>
+            <span>Costing Parameters & Pricing</span>
+          </h3>
+
+          <!-- Q-Factor Control -->
+          <div class="space-y-1.5">
+            <div class="flex justify-between items-center text-xs font-semibold">
+              <label for="qFactorInput" class="text-slate-700 flex items-center space-x-1">
+                <span>Q-Factor % (Waste / Seasoning):</span>
+              </label>
+              <span id="qFactorVal" class="text-emerald-700 font-extrabold font-mono bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200/60">10%</span>
+            </div>
+            <input type="range" id="qFactorInput" min="0" max="30" step="1" value="10" oninput="updateCalculations()" class="w-full accent-emerald-600 cursor-pointer no-print h-1.5 bg-slate-200 rounded-lg">
+            <div class="flex justify-between text-[11px] text-slate-500 pt-0.5">
+              <span>Added Waste Cost:</span>
+              <span id="qFactorCostDisplay" class="font-bold text-slate-800 font-mono">Rp 0</span>
+            </div>
+          </div>
+
+          <!-- Target Food Cost % Control (Default: 0%) -->
+          <div class="space-y-1.5 pt-3 border-t border-slate-100">
+            <div class="flex justify-between items-center text-xs font-semibold">
+              <label for="targetFcInput" class="text-slate-700">Target Food Cost %:</label>
+              <span id="targetFcVal" class="text-blue-600 font-extrabold font-mono">0%</span>
+            </div>
+            <div class="relative">
+              <input type="text" inputmode="decimal" id="targetFcInput" value="0" oninput="updateCalculations()" 
+                class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs font-bold text-slate-800 focus:outline-none focus:border-emerald-500 focus:bg-white transition-all">
+              <span class="absolute right-3 top-2 text-xs text-slate-400 font-bold">%</span>
+            </div>
+          </div>
+
+          <!-- Tax & Service Charge Controls -->
+          <div class="grid grid-cols-2 gap-3 pt-3 border-t border-slate-100">
+            <div class="space-y-1">
+              <label for="servicePercentInput" class="text-[11px] font-bold text-slate-700 block">Service Charge %:</label>
+              <div class="relative">
+                <input type="text" inputmode="decimal" id="servicePercentInput" value="10" oninput="updateCalculations()" 
+                  class="w-full bg-slate-50 border border-slate-200 rounded-xl px-2.5 py-1.5 text-xs font-bold text-slate-800 focus:outline-none focus:border-emerald-500 focus:bg-white">
+                <span class="absolute right-2.5 top-1.5 text-xs text-slate-400 font-bold">%</span>
+              </div>
+            </div>
+
+            <div class="space-y-1">
+              <label for="taxPercentInput" class="text-[11px] font-bold text-slate-700 block">Gov Tax %:</label>
+              <div class="relative">
+                <input type="text" inputmode="decimal" id="taxPercentInput" value="11" oninput="updateCalculations()" 
+                  class="w-full bg-slate-50 border border-slate-200 rounded-xl px-2.5 py-1.5 text-xs font-bold text-slate-800 focus:outline-none focus:border-emerald-500 focus:bg-white">
+                <span class="absolute right-2.5 top-1.5 text-xs text-slate-400 font-bold">%</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Actual Menu Selling Price Control -->
+          <div class="space-y-2 pt-3 border-t border-slate-100">
+            <div class="flex justify-between items-center">
+              <label for="projectedPriceInput" class="text-xs font-bold text-slate-700 block">Actual Menu Selling Price:</label>
+              <div class="flex items-center space-x-1 text-[10px] bg-slate-100 p-0.5 rounded-lg border border-slate-200 no-print">
+                <button id="priceModeGrossBtn" onclick="setPriceMode('gross')" class="px-2 py-0.5 rounded-lg font-bold bg-white text-emerald-700 shadow-xs">Gross</button>
+                <button id="priceModeNetBtn" onclick="setPriceMode('net')" class="px-2 py-0.5 rounded-lg font-bold text-slate-500 hover:text-slate-800">Net</button>
+              </div>
+            </div>
+            
+            <div class="relative">
+              <input type="text" inputmode="decimal" id="projectedPriceInput" value="0" oninput="updateCalculations()" 
+                class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-sm text-emerald-700 font-black font-mono focus:outline-none focus:border-emerald-500 focus:bg-white transition-all">
+              <button onclick="applySuggestedPrice()" class="absolute right-2 top-1.5 text-[10px] font-bold bg-white hover:bg-slate-100 text-slate-700 px-2 py-1 rounded-lg border border-slate-200 shadow-xs no-print transition-all">
+                Use Recommended
+              </button>
+            </div>
+            <div class="flex justify-between text-[10px] text-slate-500 pt-0.5">
+              <span id="priceModeHelpText">Customer Pays (Gross inc. Tax & Svc)</span>
+              <span id="calcNetPriceDisplay" class="font-semibold text-slate-700 font-mono">Net Sales: Rp 0</span>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- Cost Driver Chart Box -->
+        <div class="bg-white border border-slate-200/90 rounded-2xl p-5 shadow-sm space-y-3 no-print">
+          <h3 class="font-bold text-slate-800 text-sm border-b border-slate-100 pb-2 flex items-center space-x-2">
+            <i data-lucide="pie-chart" class="w-4 h-4 text-emerald-600"></i>
+            <span>Top Cost Drivers</span>
+          </h3>
+          <div class="relative h-48 w-full flex items-center justify-center">
+            <canvas id="costChart"></canvas>
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+
+  </main>
+
+  <!-- Global Custom Confirmation Modal -->
+  <div id="confirmModal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-xs z-50 hidden flex items-center justify-center p-4 no-print animate-in fade-in duration-150">
+    <div class="bg-white border border-slate-200 rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-4">
+      <h3 id="confirmTitle" class="font-bold text-slate-900 text-base">Confirmation</h3>
+      <p id="confirmMessage" class="text-xs text-slate-600 leading-relaxed"></p>
+      <div class="flex justify-end space-x-2 pt-2 border-t border-slate-100">
+        <button id="confirmCancelBtn" onclick="closeConfirmModal(false)" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-xl transition-colors">
+          Cancel
+        </button>
+        <button id="confirmActionButton" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl transition-colors">
+          Confirm
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Create New Recipe Modal -->
+  <div id="newRecipeModal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-xs z-50 hidden flex items-center justify-center p-4 no-print animate-in fade-in duration-150">
+    <div class="bg-white border border-slate-200 rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-4">
+      <div class="flex justify-between items-center border-b border-slate-100 pb-3">
+        <h3 class="font-extrabold text-slate-900 text-base flex items-center space-x-2">
+          <i data-lucide="book-plus" class="w-5 h-5 text-emerald-600"></i>
+          <span>Create New Recipe Card</span>
+        </h3>
+        <button onclick="closeNewRecipeModal()" class="text-slate-400 hover:text-slate-600 p-1">
+          <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+      </div>
+      <div class="space-y-3">
+        <div>
+          <label class="block text-xs font-bold text-slate-700 mb-1">Recipe Name:</label>
+          <input type="text" id="newRecipeNameInput" placeholder="e.g. Wagyu Beef Burger" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs font-semibold focus:outline-none focus:border-emerald-500 focus:bg-white">
+        </div>
+        <div>
+          <label class="block text-xs font-bold text-slate-700 mb-1">Description / Yield Notes:</label>
+          <input type="text" id="newRecipeDescInput" placeholder="e.g. Serves 1 portion, 220g patty" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-emerald-500 focus:bg-white">
+        </div>
+      </div>
+      <div class="flex justify-end space-x-2 pt-3 border-t border-slate-100">
+        <button onclick="closeNewRecipeModal()" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-xl">Cancel</button>
+        <button onclick="createNewRecipe()" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl shadow-xs">Create Recipe</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Master Ingredient Price Library Modal -->
+  <div id="masterModal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-xs z-50 hidden flex items-center justify-center p-4 no-print animate-in fade-in duration-150">
+    <div class="bg-white border border-slate-200 rounded-2xl max-w-2xl w-full max-h-[85vh] flex flex-col shadow-2xl overflow-hidden">
+      
+      <div class="p-4 border-b border-slate-100 flex items-center justify-between bg-slate-50">
+        <div class="flex items-center space-x-2">
+          <i data-lucide="database" class="w-5 h-5 text-emerald-600"></i>
+          <h3 class="font-bold text-slate-900 text-base">Master Ingredient Library</h3>
+        </div>
+        <button onclick="closeMasterModal()" class="text-slate-400 hover:text-slate-600 p-1">
+          <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+      </div>
+
+      <div class="p-4 space-y-4 overflow-y-auto flex-1">
+        
+        <!-- Search Input -->
+        <div class="flex items-center space-x-2">
+          <div class="relative flex-1">
+            <i data-lucide="search" class="w-4 h-4 text-slate-400 absolute left-3 top-2.5"></i>
+            <input type="text" id="masterSearchInput" oninput="renderMasterLibrary()" placeholder="Search saved ingredients..." class="w-full bg-slate-50 border border-slate-200 rounded-xl pl-9 pr-3 py-2 text-xs focus:outline-none focus:border-emerald-500 focus:bg-white">
+          </div>
+        </div>
+
+        <!-- Quick Add Box -->
+        <div class="bg-slate-50/80 p-3 rounded-xl border border-slate-200/80 flex flex-wrap gap-2 items-center">
+          <input type="text" id="masterNameInput" placeholder="Ingredient Name (e.g. Butter)" class="flex-1 min-w-[140px] bg-white border border-slate-200 rounded-xl px-3 py-1.5 text-xs focus:outline-none focus:border-emerald-500">
+          <select id="masterUnitInput" class="bg-white border border-slate-200 rounded-xl px-2 py-1.5 text-xs font-semibold focus:outline-none">
+            <option value="kg">kg</option>
+            <option value="gr">gr</option>
+            <option value="pcs">pcs</option>
+            <option value="L">L</option>
+            <option value="ml">ml</option>
+            <option value="portion">portion</option>
+            <option value="pack">pack</option>
+          </select>
+          <input type="text" inputmode="decimal" id="masterPriceInput" placeholder="Unit Price" class="w-28 bg-white border border-slate-200 rounded-xl px-3 py-1.5 text-xs font-mono focus:outline-none focus:border-emerald-500">
+          <button onclick="addMasterItem()" class="px-3.5 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl shadow-xs">
+            Save Item
+          </button>
+        </div>
+
+        <div class="overflow-x-auto border border-slate-200 rounded-xl">
+          <table class="w-full text-left text-xs">
+            <thead class="bg-slate-100 text-slate-600 uppercase text-[10px] font-bold">
+              <tr>
+                <th class="p-2.5">Ingredient Name</th>
+                <th class="p-2.5">Unit</th>
+                <th class="p-2.5">Unit Price</th>
+                <th class="p-2.5 text-center">Action</th>
+              </tr>
+            </thead>
+            <tbody id="masterTableBody" class="divide-y divide-slate-100">
+              <!-- Dynamically populated -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="p-4 border-t border-slate-100 bg-slate-50 flex justify-end">
+        <button onclick="closeMasterModal()" class="px-4 py-2 bg-white hover:bg-slate-100 text-slate-700 text-xs font-bold rounded-xl border border-slate-200">Close</button>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Excel Copy Paste Modal -->
+  <div id="pasteExcelModal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-xs z-50 hidden flex items-center justify-center p-4 no-print animate-in fade-in duration-150">
+    <div class="bg-white border border-slate-200 rounded-2xl max-w-2xl w-full max-h-[85vh] flex flex-col shadow-2xl overflow-hidden">
+      
+      <div class="p-4 border-b border-slate-100 flex items-center justify-between bg-slate-50">
+        <div class="flex items-center space-x-2">
+          <i data-lucide="clipboard-paste" class="w-5 h-5 text-emerald-600"></i>
+          <h3 class="font-bold text-slate-900 text-base">Paste Data from Excel / Spreadsheet</h3>
+        </div>
+        <button onclick="closePasteExcelModal()" class="text-slate-400 hover:text-slate-600 p-1">
+          <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+      </div>
+
+      <div class="p-4 space-y-3 overflow-y-auto flex-1">
+        <p class="text-xs text-slate-600">Copy table cells from Excel or Google Sheets and paste them below. Expected columns: <span class="font-bold text-slate-800">[Ingredient Name], [Qty], [Unit], [Unit Price]</span></p>
+        
+        <textarea id="excelPasteArea" oninput="processExcelPaste()" rows="5" placeholder="Paste your Excel cells here (Ctrl+V or Cmd+V)..." class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-xs font-mono text-slate-800 focus:outline-none focus:border-emerald-500 focus:bg-white"></textarea>
+
+        <div id="pastePreviewContainer" class="hidden space-y-2">
+          <h4 class="text-xs font-bold text-slate-800">Parsed Preview:</h4>
+          <div class="max-h-40 overflow-y-auto border border-slate-200 rounded-xl">
+            <table class="w-full text-left text-xs">
+              <thead class="bg-slate-100 text-slate-700 font-bold text-[10px] uppercase">
+                <tr>
+                  <th class="p-2">Name</th>
+                  <th class="p-2">Qty</th>
+                  <th class="p-2">Unit</th>
+                  <th class="p-2">Unit Price</th>
+                  <th class="p-2 text-right">Total</th>
+                </tr>
+              </thead>
+              <tbody id="pastePreviewBody" class="divide-y divide-slate-100"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <div class="p-4 border-t border-slate-100 bg-slate-50 flex items-center justify-between">
+        <div class="flex items-center space-x-3 text-xs">
+          <label class="flex items-center space-x-1 cursor-pointer">
+            <input type="radio" name="pasteMode" value="append" checked class="accent-emerald-600">
+            <span>Append Rows</span>
+          </label>
+          <label class="flex items-center space-x-1 cursor-pointer">
+            <input type="radio" name="pasteMode" value="replace" class="accent-emerald-600">
+            <span>Replace Existing</span>
+          </label>
+        </div>
+
+        <div class="flex space-x-2">
+          <button onclick="closePasteExcelModal()" class="px-4 py-2 bg-white text-slate-700 text-xs font-bold rounded-xl border border-slate-200">Cancel</button>
+          <button onclick="confirmPasteImport()" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl shadow-xs">Import Parsed Rows</button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Google Sheets Integration Modal -->
+  <div id="googleSheetsModal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-xs z-50 hidden flex items-center justify-center p-4 no-print animate-in fade-in duration-150">
+    <div class="bg-white border border-slate-200 rounded-2xl max-w-2xl w-full max-h-[85vh] flex flex-col shadow-2xl overflow-hidden">
+      
+      <div class="p-4 border-b border-slate-100 flex items-center justify-between bg-slate-50">
+        <div class="flex items-center space-x-2">
+          <i data-lucide="sheet" class="w-5 h-5 text-emerald-600"></i>
+          <h3 class="font-bold text-slate-900 text-base">Google Sheets Live Sync Configuration</h3>
+        </div>
+        <button onclick="closeGoogleSheetsModal()" class="text-slate-400 hover:text-slate-600 p-1">
+          <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+      </div>
+
+      <div class="p-5 space-y-4 overflow-y-auto flex-1 text-xs text-slate-700">
+        
+        <!-- Webhook URL Configuration -->
+        <div class="space-y-2 bg-slate-50 p-4 rounded-xl border border-slate-200">
+          <label class="block font-bold text-slate-900 text-xs">Google Apps Script Web App URL:</label>
+          <div class="flex items-center space-x-2">
+            <input type="url" id="googleWebhookUrlInput" placeholder="https://script.google.com/macros/s/AKfycbx.../exec" class="flex-1 bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs font-mono text-slate-800 focus:outline-none focus:border-emerald-500">
+            <button onclick="saveGoogleSheetsConfig()" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl transition-all shrink-0 shadow-xs">
+              Save URL
+            </button>
+          </div>
+          <p class="text-[11px] text-slate-500">Paste your deployed Apps Script URL here. Every synced recipe will create or update a sheet tab!</p>
+        </div>
+
+        <!-- Manual Sync Buttons -->
+        <div class="flex flex-wrap items-center justify-between gap-3 p-3 bg-emerald-50/60 border border-emerald-200/80 rounded-xl">
+          <div class="space-y-0.5">
+            <span class="font-bold text-emerald-950">Bi-Directional Sync Controls</span>
+            <p class="text-[11px] text-emerald-800">Push to or pull existing recipes & Master Library from Google Sheets.</p>
+          </div>
+          <div class="flex flex-wrap items-center gap-2">
+            <button onclick="pullFromGoogleSheets()" class="px-3.5 py-2 bg-white hover:bg-slate-50 text-slate-800 border border-slate-200 font-bold rounded-xl shadow-xs transition-colors flex items-center space-x-1.5" title="Fetch existing recipes & Master Library from Google Sheets">
+              <i data-lucide="cloud-download" class="w-3.5 h-3.5 text-emerald-600"></i>
+              <span>Pull from Sheets</span>
+            </button>
+            <button onclick="syncCurrentRecipeToGoogleSheets(true)" class="px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl shadow-xs transition-colors flex items-center space-x-1.5">
+              <i data-lucide="send" class="w-3.5 h-3.5"></i>
+              <span>Sync Active Recipe</span>
+            </button>
+            <button onclick="syncAllRecipesToGoogleSheets()" class="px-3 py-2 bg-white hover:bg-slate-50 text-slate-800 border border-slate-200 font-bold rounded-xl shadow-xs transition-colors flex items-center space-x-1.5">
+              <i data-lucide="layers" class="w-3.5 h-3.5 text-emerald-600"></i>
+              <span>Sync All Recipes</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Google Sheets Apps Script Instructions -->
+        <div class="space-y-3 pt-2">
+          <h4 class="font-bold text-slate-900 border-b border-slate-100 pb-2 text-xs uppercase tracking-wider flex items-center justify-between">
+            <span>Setup Instructions (1-Minute Setup)</span>
+            <button onclick="copyAppsScriptCode()" class="text-emerald-600 hover:text-emerald-700 font-bold text-[11px] flex items-center space-x-1">
+              <i data-lucide="copy" class="w-3.5 h-3.5"></i>
+              <span>Copy Apps Script Code</span>
+            </button>
+          </h4>
+
+          <div class="p-3 bg-emerald-50/70 border border-emerald-200/80 rounded-xl text-[11px] text-emerald-950 space-y-1">
+            <p class="font-bold flex items-center space-x-1">
+              <i data-lucide="database" class="w-3.5 h-3.5 text-emerald-600"></i>
+              <span>Bi-Directional Google Sheets Sync:</span>
+            </p>
+            <p class="text-emerald-900">
+              When updating your Apps Script code below, both <span class="font-bold font-mono">doGet</span> and <span class="font-bold font-mono">doPost</span> functions are enabled. You can now save recipes to Google Sheets and read/import them back in any browser or session!
+            </p>
+          </div>
+
+          <ol class="list-decimal list-inside space-y-1.5 text-slate-600 text-xs">
+            <li>Open a Google Sheet, click <span class="font-semibold text-slate-800">Extensions &gt; Apps Script</span>.</li>
+            <li>Paste the script code below into the Apps Script editor (delete existing code).</li>
+            <li>Click <span class="font-semibold text-slate-800">Deploy &gt; New deployment</span> (or update existing deployment).</li>
+            <li>Select type <span class="font-semibold text-slate-800">Web app</span>, set <span class="font-semibold text-slate-800">"Who has access"</span> to <span class="font-bold text-emerald-700">"Anyone"</span>.</li>
+            <li>Click <span class="font-semibold text-slate-800">Deploy</span>, authorize permissions, and copy the Web App URL into the box above!</li>
+          </ol>
+
+          <div class="relative">
+            <textarea id="appsScriptCodeArea" readonly rows="10" class="w-full bg-slate-900 text-emerald-400 font-mono text-[11px] p-3 rounded-xl border border-slate-800 focus:outline-none resize-none">
+function doGet(e) {
+  try {
+    var ss = SpreadsheetApp.getActiveSpreadsheet();
+    var sheets = ss.getSheets();
+    var masterLibrary = {};
+    var recipes = [];
+    
+    // 1. Read Master Price Library
+    var masterSheet = ss.getSheetByName("Master_Price_Library");
+    if (masterSheet) {
+      var masterData = masterSheet.getDataRange().getValues();
+      for (var i = 1; i < masterData.length; i++) {
+        var ingName = String(masterData[i][0]).trim();
+        if (ingName) {
+          masterLibrary[ingName] = {
+            unit: String(masterData[i][1] || 'pcs'),
+            unitPrice: Number(masterData[i][2]) || 0
+          };
+        }
+      }
+    }
+    
+    // 2. Read Recipe Sheets
+    for (var s = 0; s < sheets.length; s++) {
+      var sheet = sheets[s];
+      if (sheet.getName() === "Master_Price_Library") continue;
+      
+      var rawJson = sheet.getRange("Z1").getValue();
+      if (rawJson && typeof rawJson === "string" && rawJson.charAt(0) === "{") {
+        try {
+          recipes.push(JSON.parse(rawJson));
+          continue;
+        } catch(err) {}
+      }
+      
+      var name = sheet.getRange(1, 1).getValue().toString().replace("Recipe: ", "").trim();
+      var desc = sheet.getRange(2, 1).getValue().toString().replace("Description: ", "").trim();
+      if (!name) name = sheet.getName();
+      
+      var lastRow = sheet.getLastRow();
+      var ingredients = [];
+      if (lastRow >= 6) {
+        var dataRange = sheet.getRange(6, 1, Math.min(lastRow - 5, 50), 6).getValues();
+        for (var r = 0; r < dataRange.length; r++) {
+          var row = dataRange[r];
+          var ingName = String(row[1] || "").trim();
+          if (!ingName || ingName.indexOf("Subtotal") === 0) break;
+          ingredients.push({
+            name: ingName,
+            qty: Number(row[2]) || 0,
+            unit: String(row[3] || 'pcs'),
+            unitPrice: Number(row[4]) || 0
+          });
+        }
+      }
+      
+      recipes.push({
+        id: "rec_sheet_" + s + "_" + Date.now(),
+        name: name,
+        description: desc,
+        qFactor: 10,
+        targetFc: 0,
+        servicePercent: 10,
+        taxPercent: 11,
+        priceMode: "gross",
+        projectedPrice: 0,
+        ingredients: ingredients
+      });
+    }
+    
+    return ContentService.createTextOutput(JSON.stringify({
+      result: "success",
+      masterLibrary: masterLibrary,
+      recipes: recipes
+    })).setMimeType(ContentService.MimeType.JSON);
+  } catch(err) {
+    return ContentService.createTextOutput(JSON.stringify({
+      result: "error",
+      error: err.toString()
+    })).setMimeType(ContentService.MimeType.JSON);
+  }
+}
+
+function doPost(e) {
+  try {
+    var data = JSON.parse(e.postData.contents);
+    var ss = SpreadsheetApp.getActiveSpreadsheet();
+    
+    // --- 1. Master Price Library Sync ---
+    var masterSheetName = "Master_Price_Library";
+    var masterSheet = ss.getSheetByName(masterSheetName);
+    if (!masterSheet) {
+      masterSheet = ss.insertSheet(masterSheetName);
+      masterSheet.getRange(1, 1, 1, 4).setValues([["Ingredient Name", "Unit", "Unit Price", "Last Updated"]])
+                 .setFontWeight("bold").setBackground("#a7f3d0");
+    }
+    
+    if (data.ingredients && data.ingredients.length > 0) {
+      var masterData = masterSheet.getDataRange().getValues();
+      var masterMap = {};
+      for (var i = 1; i < masterData.length; i++) {
+        var ingName = String(masterData[i][0]).trim().toLowerCase();
+        if (ingName) {
+          masterMap[ingName] = { row: i + 1, unit: masterData[i][1], price: masterData[i][2] };
+        }
+      }
+      
+      var nowStr = Utilities.formatDate(new Date(), ss.getSpreadsheetTimeZone() || "GMT", "yyyy-MM-dd HH:mm");
+      
+      data.ingredients.forEach(function(ing) {
+        var nameClean = String(ing.name || "").trim();
+        if (!nameClean) return;
+        var key = nameClean.toLowerCase();
+        var unitVal = ing.unit || "pcs";
+        var priceVal = Number(ing.unitPrice) || 0;
+        
+        if (masterMap[key]) {
+          var existing = masterMap[key];
+          if (Number(existing.price) !== priceVal || String(existing.unit) !== String(unitVal)) {
+            masterSheet.getRange(existing.row, 2, 1, 3).setValues([[unitVal, priceVal, nowStr]]);
+          }
+        } else {
+          masterSheet.appendRow([nameClean, unitVal, priceVal, nowStr]);
+          masterMap[key] = { row: masterSheet.getLastRow(), unit: unitVal, price: priceVal };
+        }
+      });
+    }
+
+    // --- 2. Individual Recipe Sheet Sync ---
+    var sheetName = (data.name || "Untitled Recipe").replace(/[:\\/?*\[\]]/g, "_").substring(0, 30);
+    var sheet = ss.getSheetByName(sheetName);
+    if (!sheet) {
+      sheet = ss.insertSheet(sheetName);
+    } else {
+      sheet.clear();
+    }
+    
+    // Store structured JSON payload in cell Z1 for instant recovery
+    sheet.getRange("Z1").setValue(JSON.stringify(data));
+    
+    // Title & Info
+    sheet.getRange(1, 1).setValue("Recipe: " + data.name).setFontWeight("bold").setFontSize(14);
+    sheet.getRange(2, 1).setValue("Description: " + (data.description || ""));
+    sheet.getRange(3, 1).setValue("Currency: " + (data.currency || "IDR"));
+    
+    // Ingredients Header
+    var headers = [["#", "Ingredient Name", "Quantity", "Unit", "Unit Price", "Total Cost"]];
+    sheet.getRange(5, 1, 1, 6).setValues(headers).setFontWeight("bold").setBackground("#d1fae5");
+    
+    // Ingredients Rows
+    var rows = [];
+    if (data.ingredients && data.ingredients.length > 0) {
+      data.ingredients.forEach(function(ing, index) {
+        rows.push([index + 1, ing.name, ing.qty, ing.unit, ing.unitPrice, ing.lineTotal]);
+      });
+      sheet.getRange(6, 1, rows.length, 6).setValues(rows);
+    }
+    
+    // Summary Metrics
+    var startRow = 6 + (rows.length || 1) + 1;
+    var summary = [
+      ["Subtotal Ingredients Cost:", "", "", "", "", data.subtotal],
+      ["Q-Factor Cost (" + data.qFactor + "%):", "", "", "", "", data.qFactorCost],
+      ["Total Food Cost:", "", "", "", "", data.totalFoodCost],
+      ["Target Food Cost %:", "", "", "", "", data.targetFc + "%"],
+      ["Recommended Price (Net):", "", "", "", "", data.recommendedNetPrice],
+      ["Recommended Price (Gross):", "", "", "", "", data.recommendedGrossPrice],
+      ["Actual Selling Price:", "", "", "", "", data.projectedPrice],
+      ["Actual Food Cost %:", "", "", "", "", data.actualFcPct.toFixed(2) + "%"],
+      ["Gross Profit Margin:", "", "", "", "", data.grossMargin]
+    ];
+    sheet.getRange(startRow, 1, summary.length, 6).setValues(summary);
+    sheet.getRange(startRow, 1, summary.length, 1).setFontWeight("bold");
+    sheet.getRange(startRow, 6, summary.length, 1).setFontWeight("bold");
+    
+    return ContentService.createTextOutput(JSON.stringify({ result: "success", sheet: sheetName })).setMimeType(ContentService.MimeType.JSON);
+  } catch(err) {
+    return ContentService.createTextOutput(JSON.stringify({ result: "error", error: err.toString() })).setMimeType(ContentService.MimeType.JSON);
+  }
+}</textarea>
+          </div>
+        </div>
+
+      </div>
+
+      <div class="p-4 border-t border-slate-100 bg-slate-50 flex justify-end space-x-2">
+        <button onclick="closeGoogleSheetsModal()" class="px-4 py-2 bg-white hover:bg-slate-100 text-slate-700 text-xs font-bold rounded-xl border border-slate-200 transition-colors">
+          Close
+        </button>
+      </div>
+
+    </div>
+  </div>
+
+  <script>
+    /* ==========================================================================
+       Application State & Initial Setup
+       ========================================================================== */
+    
+    let masterLibrary = {};
+
+    const STANDARD_UNITS = [
+      'pcs', 'kg', 'gr', 'L', 'ml', 'portion', 'slice', 
+      'tbsp', 'tsp', 'cup', 'oz', 'lb', 'can', 'pack', 'box'
+    ];
+
+    let recipes = [
+      {
+        id: "rec_1",
+        name: "My First Recipe",
+        description: "Add ingredients below to calculate food cost and recommended selling price.",
+        qFactor: 10,
+        targetFc: 0,
+        servicePercent: 10,
+        taxPercent: 11,
+        priceMode: "gross",
+        projectedPrice: 0,
+        ingredients: []
+      }
+    ];
+
+    let activeRecipeId = "rec_1";
+    let currentCurrency = "IDR";
+    let chartInstance = null;
+    let pendingConfirmAction = null;
+    let googleWebhookUrl = "";
+    let parsedExcelData = [];
+
+    const currencies = {
+      IDR: { symbol: "Rp", rate: 1, decimals: 0 },
+      USD: { symbol: "$", rate: 0.000064, decimals: 2 },
+      EUR: { symbol: "€", rate: 0.000059, decimals: 2 },
+      GBP: { symbol: "£", rate: 0.000050, decimals: 2 }
+    };
+
+    window.addEventListener('DOMContentLoaded', () => {
+      if (window.lucide) lucide.createIcons();
+      loadLocalStorageData();
+      updateMasterDatalist();
+      populateRecipeDropdown();
+      renderActiveRecipe();
+      initChart();
+      updateSheetsBadge();
+
+      // Attach confirmation modal listener safely
+      const confirmBtn = document.getElementById('confirmActionButton');
+      if (confirmBtn) {
+        confirmBtn.addEventListener('click', () => {
+          closeConfirmModal(true);
+        });
+      }
+
+      if (googleWebhookUrl) {
+        pullFromGoogleSheets(true);
+      }
+
+      // Click outside listener for export menu
+      document.addEventListener('click', (e) => {
+        const drop = document.getElementById('exportMenu');
+        const btn = document.getElementById('exportDropdownBtn');
+        if (drop && btn && !drop.contains(e.target) && !btn.contains(e.target)) {
+          drop.classList.add('hidden');
+        }
+      });
+    });
+
+    function showToast(title, message, type = 'info', duration = 3500) {
+      const container = document.getElementById('toastContainer');
+      if (!container) return;
+
+      const toast = document.createElement('div');
+      toast.className = `pointer-events-auto flex items-start space-x-3 p-3.5 rounded-2xl shadow-xl border backdrop-blur-md transition-all transform duration-300 translate-y-4 opacity-0 text-xs ${
+        type === 'success' 
+          ? 'bg-emerald-900/90 border-emerald-700 text-white' 
+          : type === 'error'
+          ? 'bg-rose-900/90 border-rose-700 text-white'
+          : 'bg-slate-900/90 border-slate-700 text-white'
+      }`;
+
+      const icon = type === 'success' ? 'check-circle-2' : type === 'error' ? 'alert-triangle' : 'refresh-cw';
+      const iconSpin = type === 'info' ? 'animate-spin' : '';
+
+      toast.innerHTML = `
+        <div class="shrink-0 mt-0.5 text-emerald-400">
+          <i data-lucide="${icon}" class="w-4 h-4 ${iconSpin}"></i>
+        </div>
+        <div class="flex-1 space-y-0.5">
+          <p class="font-bold tracking-tight">${title}</p>
+          <p class="text-[11px] opacity-80 leading-relaxed">${message}</p>
+        </div>
+        <button onclick="this.parentElement.remove()" class="opacity-60 hover:opacity-100 p-0.5 shrink-0">
+          <i data-lucide="x" class="w-3.5 h-3.5"></i>
+        </button>
+      `;
+
+      container.appendChild(toast);
+      if (window.lucide) lucide.createIcons();
+
+      requestAnimationFrame(() => {
+        toast.classList.remove('translate-y-4', 'opacity-0');
+      });
+
+      setTimeout(() => {
+        toast.classList.add('opacity-0', 'translate-y-2');
+        setTimeout(() => toast.remove(), 300);
+      }, duration);
+    }
+
+    function parseNumeric(val) {
+      if (typeof val === 'number') return isNaN(val) ? 0 : val;
+      if (!val) return 0;
+      let cleaned = String(val).trim().replace(/,/g, '.');
+      let parsed = parseFloat(cleaned);
+      return isNaN(parsed) ? 0 : parsed;
+    }
+
+    function formatCurrency(val) {
+      const curr = currencies[currentCurrency] || currencies.IDR;
+      const converted = val * curr.rate;
+      return curr.symbol + " " + converted.toLocaleString('en-US', {
+        minimumFractionDigits: curr.decimals,
+        maximumFractionDigits: curr.decimals
+      });
+    }
+
+    function getActiveRecipe() {
+      return recipes.find(r => r.id === activeRecipeId) || recipes[0];
+    }
+
+    function saveLocalStorageData() {
+      try {
+        localStorage.setItem('chefcost_recipes_v2', JSON.stringify(recipes));
+        localStorage.setItem('chefcost_master_v2', JSON.stringify(masterLibrary));
+        localStorage.setItem('chefcost_active_id_v2', activeRecipeId);
+        localStorage.setItem('chefcost_webhook_url_v2', googleWebhookUrl);
+      } catch(e) {
+        console.warn('LocalStorage save error:', e);
+      }
+    }
+
+    function loadLocalStorageData() {
+      try {
+        const savedRecipes = localStorage.getItem('chefcost_recipes_v2');
+        const savedMaster = localStorage.getItem('chefcost_master_v2');
+        const savedActive = localStorage.getItem('chefcost_active_id_v2');
+        const savedWebhook = localStorage.getItem('chefcost_webhook_url_v2');
+
+        if (savedRecipes) recipes = JSON.parse(savedRecipes);
+        if (savedMaster) masterLibrary = JSON.parse(savedMaster);
+        if (savedActive && recipes.some(r => r.id === savedActive)) activeRecipeId = savedActive;
+        if (savedWebhook) googleWebhookUrl = savedWebhook;
+      } catch(e) {
+        console.warn('LocalStorage load error:', e);
+      }
+    }
+
+    function updateMasterDatalist() {
+      const datalist = document.getElementById('masterIngredientsList');
+      if (!datalist) return;
+      datalist.innerHTML = '';
+      Object.keys(masterLibrary).forEach(name => {
+        const opt = document.createElement('option');
+        opt.value = name;
+        datalist.appendChild(opt);
+      });
+    }
+
+    function confirmResetAll() {
+      showConfirmModal(
+        "Reset All Data?",
+        "This will delete all recipes and clear your master library. Start completely blank?",
+        () => {
+          localStorage.removeItem('chefcost_recipes_v2');
+          localStorage.removeItem('chefcost_master_v2');
+          localStorage.removeItem('chefcost_active_id_v2');
+
+          masterLibrary = {};
+          activeRecipeId = "rec_1";
+          recipes = [
+            {
+              id: "rec_1",
+              name: "My First Recipe",
+              description: "Add ingredients below to calculate food cost and recommended selling price.",
+              qFactor: 10,
+              targetFc: 0,
+              servicePercent: 10,
+              taxPercent: 11,
+              priceMode: "gross",
+              projectedPrice: 0,
+              ingredients: []
+            }
+          ];
+
+          saveLocalStorageData();
+          updateMasterDatalist();
+          populateRecipeDropdown();
+          renderActiveRecipe();
+        }
+      );
+    }
+
+    function populateRecipeDropdown() {
+      const select = document.getElementById('recipeSelect');
+      if (!select) return;
+      select.innerHTML = '';
+      recipes.forEach(r => {
+        const opt = document.createElement('option');
+        opt.value = r.id;
+        opt.textContent = r.name;
+        if (r.id === activeRecipeId) opt.selected = true;
+        select.appendChild(opt);
+      });
+    }
+
+    function switchRecipe(id) {
+      activeRecipeId = id;
+      saveLocalStorageData();
+      renderActiveRecipe();
+    }
+
+    function renderActiveRecipe() {
+      const recipe = getActiveRecipe();
+      if (!recipe) return;
+
+      const titleInput = document.getElementById('recipeTitleInput');
+      const descInput = document.getElementById('recipeDescInput');
+      const qFactorInput = document.getElementById('qFactorInput');
+      const targetFcInput = document.getElementById('targetFcInput');
+      const serviceInput = document.getElementById('servicePercentInput');
+      const taxInput = document.getElementById('taxPercentInput');
+      const projectedInput = document.getElementById('projectedPriceInput');
+
+      if (titleInput) titleInput.value = recipe.name || '';
+      if (descInput) descInput.value = recipe.description || '';
+      if (qFactorInput) qFactorInput.value = recipe.qFactor ?? 10;
+      if (targetFcInput) targetFcInput.value = recipe.targetFc ?? 0;
+      if (serviceInput) serviceInput.value = recipe.servicePercent ?? 10;
+      if (taxInput) taxInput.value = recipe.taxPercent ?? 11;
+      if (projectedInput) projectedInput.value = recipe.projectedPrice ?? 0;
+
+      setPriceModeUI(recipe.priceMode || 'gross');
+      renderIngredientsTable();
+      updateCalculations();
+      if (window.lucide) lucide.createIcons();
+    }
+
+    function updateRecipeTitle(val) {
+      const recipe = getActiveRecipe();
+      recipe.name = val || "Untitled Recipe";
+      populateRecipeDropdown();
+      saveLocalStorageData();
+    }
+
+    function updateRecipeDesc(val) {
+      const recipe = getActiveRecipe();
+      recipe.description = val || "";
+      saveLocalStorageData();
+    }
+
+    function changeCurrency(val) {
+      currentCurrency = val;
+      const desktopSelect = document.getElementById('currencySelect');
+      const mobileSelect = document.getElementById('currencySelectMobile');
+      if (desktopSelect) desktopSelect.value = val;
+      if (mobileSelect) mobileSelect.value = val;
+      renderActiveRecipe();
+    }
+
+    function renderIngredientsTable() {
+      const recipe = getActiveRecipe();
+      const tbody = document.getElementById('ingredientsTableBody');
+      if (!tbody) return;
+
+      tbody.innerHTML = '';
+
+      if (!recipe.ingredients || recipe.ingredients.length === 0) {
+        tbody.innerHTML = `
+          <tr>
+            <td colspan="7" class="py-8 text-center text-slate-400 font-medium italic">
+              No ingredients added yet. Tap <strong>"Add Row"</strong> or <strong>"Paste Excel"</strong> to begin!
+            </td>
+          </tr>
+        `;
+        return;
+      }
+
+      recipe.ingredients.forEach((ing, index) => {
+        const qty = parseNumeric(ing.qty);
+        const unitPrice = parseNumeric(ing.unitPrice);
+        const lineTotal = qty * unitPrice;
+
+        const tr = document.createElement('tr');
+        tr.className = "hover:bg-slate-50/80 transition-colors";
+
+        let unitOptionsHtml = STANDARD_UNITS.map(u => 
+          `<option value="${u}" ${ing.unit === u ? 'selected' : ''}>${u}</option>`
+        ).join('');
+
+        if (!STANDARD_UNITS.includes(ing.unit) && ing.unit) {
+          unitOptionsHtml += `<option value="${ing.unit}" selected>${ing.unit}</option>`;
+        }
+
+        tr.innerHTML = `
+          <td class="py-2 px-1.5 text-center text-slate-400 font-bold text-[11px]">${index + 1}</td>
+          <td class="py-2 px-2">
+            <input type="text" list="masterIngredientsList" value="${ing.name || ''}" onchange="updateIngredient(${index}, 'name', this.value)" 
+              placeholder="e.g. Flour" class="w-full bg-transparent border-b border-transparent hover:border-slate-300 focus:border-emerald-500 rounded px-1.5 py-1 focus:outline-none font-medium text-xs">
+          </td>
+          <td class="py-2 px-1.5">
+            <input type="text" inputmode="decimal" value="${ing.qty ?? 0}" onchange="updateIngredient(${index}, 'qty', this.value)" 
+              class="w-full bg-slate-50 border border-slate-200 rounded-lg px-2 py-1.5 text-xs font-semibold focus:outline-none focus:border-emerald-500">
+          </td>
+          <td class="py-2 px-1.5">
+            <select onchange="updateIngredient(${index}, 'unit', this.value)" class="w-full bg-slate-50 border border-slate-200 rounded-lg px-1.5 py-1.5 text-xs font-semibold focus:outline-none focus:border-emerald-500">
+              ${unitOptionsHtml}
+            </select>
+          </td>
+          <td class="py-2 px-2">
+            <input type="text" inputmode="decimal" value="${ing.unitPrice ?? 0}" onchange="updateIngredient(${index}, 'unitPrice', this.value)" 
+              class="w-full bg-slate-50 border border-slate-200 rounded-lg px-2 py-1.5 text-xs font-mono font-semibold focus:outline-none focus:border-emerald-500">
+          </td>
+          <td class="py-2 px-2 text-right font-mono font-bold text-slate-800 text-xs">
+            ${formatCurrency(lineTotal)}
+          </td>
+          <td class="py-2 px-1 text-center no-print">
+            <button onclick="deleteIngredientRow(${index})" class="text-slate-400 hover:text-rose-600 transition-colors p-1.5" title="Remove row">
+              <i data-lucide="x-circle" class="w-4 h-4"></i>
+            </button>
+          </td>
+        `;
+
+        tbody.appendChild(tr);
+      });
+
+      if (window.lucide) lucide.createIcons();
+    }
+
+    function addIngredientRow(data = null) {
+      const recipe = getActiveRecipe();
+      const newItem = data || { name: "", qty: 1, unit: "kg", unitPrice: 0 };
+      recipe.ingredients.push(newItem);
+      saveLocalStorageData();
+      renderIngredientsTable();
+      updateCalculations();
+    }
+
+    function deleteIngredientRow(index) {
+      const recipe = getActiveRecipe();
+      recipe.ingredients.splice(index, 1);
+      saveLocalStorageData();
+      renderIngredientsTable();
+      updateCalculations();
+    }
+
+    function updateIngredient(index, field, value) {
+      const recipe = getActiveRecipe();
+      if (!recipe.ingredients[index]) return;
+
+      if (field === 'qty' || field === 'unitPrice') {
+        recipe.ingredients[index][field] = parseNumeric(value);
+      } else {
+        recipe.ingredients[index][field] = value;
+      }
+
+      const nameKey = recipe.ingredients[index].name ? recipe.ingredients[index].name.trim() : '';
+      if (nameKey) {
+        if (field === 'name' && masterLibrary[nameKey]) {
+          recipe.ingredients[index].unitPrice = masterLibrary[nameKey].unitPrice;
+          recipe.ingredients[index].unit = masterLibrary[nameKey].unit;
+        } else if (field === 'unitPrice' || field === 'unit') {
+          masterLibrary[nameKey] = {
+            unit: recipe.ingredients[index].unit || 'pcs',
+            unitPrice: parseNumeric(recipe.ingredients[index].unitPrice)
+          };
+          updateMasterDatalist();
+        }
+      }
+
+      saveLocalStorageData();
+      renderIngredientsTable();
+      updateCalculations();
+    }
+
+    function setPriceMode(mode) {
+      const recipe = getActiveRecipe();
+      recipe.priceMode = mode;
+      setPriceModeUI(mode);
+      saveLocalStorageData();
+      updateCalculations();
+    }
+
+    function setPriceModeUI(mode) {
+      const grossBtn = document.getElementById('priceModeGrossBtn');
+      const netBtn = document.getElementById('priceModeNetBtn');
+      const helpText = document.getElementById('priceModeHelpText');
+
+      if (grossBtn && netBtn) {
+        if (mode === 'gross') {
+          grossBtn.className = "px-2 py-0.5 rounded-lg font-bold bg-white text-emerald-700 shadow-xs";
+          netBtn.className = "px-2 py-0.5 rounded-lg font-bold text-slate-500 hover:text-slate-800";
+          if (helpText) helpText.textContent = "Customer Pays (Gross inc. Tax & Svc)";
+        } else {
+          netBtn.className = "px-2 py-0.5 rounded-lg font-bold bg-white text-emerald-700 shadow-xs";
+          grossBtn.className = "px-2 py-0.5 rounded-lg font-bold text-slate-500 hover:text-slate-800";
+          if (helpText) helpText.textContent = "Net Sales Revenue (Excl. Tax & Svc)";
+        }
+      }
+    }
+
+    function applySuggestedPrice() {
+      const recipe = getActiveRecipe();
+      const targetFc = parseNumeric(recipe.targetFc);
+      if (targetFc <= 0) {
+        showConfirmModal("Target Food Cost Required", "Please enter a Target Food Cost % greater than 0 to generate a recommended selling price.", null, true);
+        return;
+      }
+
+      const subtotal = recipe.ingredients.reduce((s, i) => s + (parseNumeric(i.qty) * parseNumeric(i.unitPrice)), 0);
+      const qFactorCost = subtotal * (parseNumeric(recipe.qFactor) / 100);
+      const totalFoodCost = subtotal + qFactorCost;
+      const recNet = totalFoodCost / (targetFc / 100);
+
+      const taxSvcMultiplier = (1 + (parseNumeric(recipe.servicePercent) / 100)) * (1 + (parseNumeric(recipe.taxPercent) / 100));
+      const recGross = recNet * taxSvcMultiplier;
+
+      recipe.projectedPrice = recipe.priceMode === 'gross' ? Math.round(recGross) : Math.round(recNet);
+      const input = document.getElementById('projectedPriceInput');
+      if (input) input.value = recipe.projectedPrice;
+
+      saveLocalStorageData();
+      updateCalculations();
+    }
+
+    function updateCalculations() {
+      const recipe = getActiveRecipe();
+
+      recipe.qFactor = parseNumeric(document.getElementById('qFactorInput')?.value);
+      recipe.targetFc = parseNumeric(document.getElementById('targetFcInput')?.value);
+      recipe.servicePercent = parseNumeric(document.getElementById('servicePercentInput')?.value);
+      recipe.taxPercent = parseNumeric(document.getElementById('taxPercentInput')?.value);
+      recipe.projectedPrice = parseNumeric(document.getElementById('projectedPriceInput')?.value);
+
+      const qFactorVal = document.getElementById('qFactorVal');
+      const targetFcVal = document.getElementById('targetFcVal');
+      if (qFactorVal) qFactorVal.textContent = recipe.qFactor + "%";
+      if (targetFcVal) targetFcVal.textContent = recipe.targetFc + "%";
+
+      const subtotal = recipe.ingredients.reduce((s, i) => s + (parseNumeric(i.qty) * parseNumeric(i.unitPrice)), 0);
+      const qFactorCost = subtotal * (recipe.qFactor / 100);
+      const totalFoodCost = subtotal + qFactorCost;
+
+      const recommendedNet = recipe.targetFc > 0 ? (totalFoodCost / (recipe.targetFc / 100)) : 0;
+      const taxSvcMultiplier = (1 + (recipe.servicePercent / 100)) * (1 + (recipe.taxPercent / 100));
+      const recommendedGross = recommendedNet * taxSvcMultiplier;
+
+      let actualNet = recipe.projectedPrice;
+      let actualGross = recipe.projectedPrice;
+
+      if (recipe.priceMode === 'gross') {
+        actualNet = taxSvcMultiplier > 0 ? (recipe.projectedPrice / taxSvcMultiplier) : recipe.projectedPrice;
+      } else {
+        actualGross = recipe.projectedPrice * taxSvcMultiplier;
+      }
+
+      const actualFcPct = actualNet > 0 ? ((totalFoodCost / actualNet) * 100) : 0;
+      const grossMargin = actualNet - totalFoodCost;
+      const marginPct = actualNet > 0 ? ((grossMargin / actualNet) * 100) : 0;
+
+      const elSub = document.getElementById('tableSubtotal');
+      const elQCost = document.getElementById('qFactorCostDisplay');
+      const elCardTargetPrice = document.getElementById('cardPreliminaryPrice');
+      const elCardTargetGross = document.getElementById('targetGrossVal');
+      const elCardTotalFC = document.getElementById('cardTotalFoodCost');
+      const elCardActualFC = document.getElementById('cardActualFC');
+      const elCardFCDiff = document.getElementById('cardFCDiff');
+      const elCardGrossMargin = document.getElementById('cardGrossMargin');
+      const elCardMarginPercent = document.getElementById('cardMarginPercent');
+      const elNetSalesDisplay = document.getElementById('calcNetPriceDisplay');
+
+      if (elSub) elSub.textContent = formatCurrency(subtotal);
+      if (elQCost) elQCost.textContent = formatCurrency(qFactorCost);
+      if (elCardTargetPrice) elCardTargetPrice.textContent = formatCurrency(recommendedNet);
+      if (elCardTargetGross) elCardTargetGross.textContent = formatCurrency(recommendedGross);
+      if (elCardTotalFC) elCardTotalFC.textContent = formatCurrency(totalFoodCost);
+      if (elCardActualFC) elCardActualFC.textContent = actualFcPct.toFixed(1) + "%";
+      if (elCardFCDiff) elCardFCDiff.textContent = "Target Benchmark: " + recipe.targetFc + "%";
+      if (elCardGrossMargin) elCardGrossMargin.textContent = formatCurrency(grossMargin);
+      if (elCardMarginPercent) elCardMarginPercent.textContent = "Net Profit Margin: " + marginPct.toFixed(1) + "%";
+      if (elNetSalesDisplay) elNetSalesDisplay.textContent = "Net Sales: " + formatCurrency(actualNet);
+
+      const badge = document.getElementById('fcBadge');
+      if (badge) {
+        if (recipe.targetFc > 0 && actualFcPct > 0) {
+          if (actualFcPct <= recipe.targetFc) {
+            badge.textContent = "On Target";
+            badge.className = "px-2.5 py-0.5 text-[10px] font-black rounded-full bg-emerald-100 text-emerald-800 border border-emerald-200/80";
+          } else {
+            badge.textContent = "High Cost";
+            badge.className = "px-2.5 py-0.5 text-[10px] font-black rounded-full bg-rose-100 text-rose-800 border border-rose-200/80";
+          }
+        } else {
+          badge.textContent = "N/A";
+          badge.className = "px-2 py-0.5 text-[10px] font-bold rounded-full bg-slate-100 text-slate-600 border border-slate-200";
+        }
+      }
+
+      updateChart();
+      saveLocalStorageData();
+    }
+
+    function initChart() {
+      const ctx = document.getElementById('costChart');
+      if (!ctx) return;
+
+      chartInstance = new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+          labels: [],
+          datasets: [{
+            data: [],
+            borderWidth: 2,
+            borderColor: '#ffffff',
+            backgroundColor: [
+              '#059669', '#10b981', '#3b82f6', '#8b5cf6', 
+              '#ec4899', '#f59e0b', '#64748b', '#06b6d4'
+            ]
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          cutout: '68%',
+          plugins: {
+            legend: { 
+              position: 'bottom', 
+              labels: { 
+                boxWidth: 10, 
+                usePointStyle: true,
+                font: { size: 10, family: 'Inter' } 
+              } 
+            }
+          }
+        }
+      });
+    }
+
+    function updateChart() {
+      if (!chartInstance) return;
+      const recipe = getActiveRecipe();
+      
+      const sorted = [...recipe.ingredients]
+        .map(i => ({ name: i.name || 'Unnamed', cost: parseNumeric(i.qty) * parseNumeric(i.unitPrice) }))
+        .sort((a, b) => b.cost - a.cost)
+        .filter(i => i.cost > 0);
+
+      const top = sorted.slice(0, 5);
+      const othersCost = sorted.slice(5).reduce((s, i) => s + i.cost, 0);
+
+      if (othersCost > 0) top.push({ name: 'Others', cost: othersCost });
+
+      if (top.length === 0) {
+        chartInstance.data.labels = ['No Data'];
+        chartInstance.data.datasets[0].data = [1];
+        chartInstance.data.datasets[0].backgroundColor = ['#f1f5f9'];
+      } else {
+        chartInstance.data.labels = top.map(i => i.name);
+        chartInstance.data.datasets[0].data = top.map(i => i.cost);
+        chartInstance.data.datasets[0].backgroundColor = [
+          '#059669', '#10b981', '#3b82f6', '#8b5cf6', 
+          '#ec4899', '#f59e0b', '#64748b', '#06b6d4'
+        ];
+      }
+      chartInstance.update();
+    }
+
+    function openNewRecipeModal() {
+      const nameIn = document.getElementById('newRecipeNameInput');
+      const descIn = document.getElementById('newRecipeDescInput');
+      if (nameIn) nameIn.value = '';
+      if (descIn) descIn.value = '';
+      document.getElementById('newRecipeModal')?.classList.remove('hidden');
+    }
+
+    function closeNewRecipeModal() {
+      document.getElementById('newRecipeModal')?.classList.add('hidden');
+    }
+
+    function createNewRecipe() {
+      const name = document.getElementById('newRecipeNameInput')?.value.trim() || "New Recipe";
+      const desc = document.getElementById('newRecipeDescInput')?.value.trim() || "";
+
+      const newId = "rec_" + Date.now();
+      recipes.push({
+        id: newId,
+        name: name,
+        description: desc,
+        qFactor: 10,
+        targetFc: 0,
+        servicePercent: 10,
+        taxPercent: 11,
+        priceMode: "gross",
+        projectedPrice: 0,
+        ingredients: []
+      });
+
+      activeRecipeId = newId;
+      saveLocalStorageData();
+      populateRecipeDropdown();
+      renderActiveRecipe();
+      closeNewRecipeModal();
+    }
+
+    function duplicateActiveRecipe() {
+      const current = getActiveRecipe();
+      const newId = "rec_" + Date.now();
+      
+      recipes.push({
+        ...JSON.parse(JSON.stringify(current)),
+        id: newId,
+        name: current.name + " (Copy)"
+      });
+
+      activeRecipeId = newId;
+      saveLocalStorageData();
+      populateRecipeDropdown();
+      renderActiveRecipe();
+    }
+
+    function confirmDeleteRecipe() {
+      if (recipes.length <= 1) {
+        showConfirmModal("Cannot Delete", "You must keep at least one recipe card in your library.", null, true);
+        return;
+      }
+
+      const active = getActiveRecipe();
+      showConfirmModal(
+        "Delete Recipe?",
+        `Are you sure you want to delete "${active.name}"? This action cannot be undone.`,
+        () => {
+          recipes = recipes.filter(r => r.id !== activeRecipeId);
+          activeRecipeId = recipes[0].id;
+          saveLocalStorageData();
+          populateRecipeDropdown();
+          renderActiveRecipe();
+        }
+      );
+    }
+
+    function openMasterModal() {
+      renderMasterLibrary();
+      document.getElementById('masterModal')?.classList.remove('hidden');
+    }
+
+    function closeMasterModal() {
+      document.getElementById('masterModal')?.classList.add('hidden');
+    }
+
+    function renderMasterLibrary() {
+      const tbody = document.getElementById('masterTableBody');
+      const searchVal = (document.getElementById('masterSearchInput')?.value || '').toLowerCase().trim();
+      if (!tbody) return;
+      tbody.innerHTML = '';
+
+      let keys = Object.keys(masterLibrary);
+      if (searchVal) {
+        keys = keys.filter(k => k.toLowerCase().includes(searchVal));
+      }
+
+      if (keys.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="4" class="p-6 text-center text-slate-400 italic">No matching ingredients found in library.</td></tr>`;
+        return;
+      }
+
+      keys.forEach(k => {
+        const item = masterLibrary[k];
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td class="p-2.5 font-bold text-slate-800">${k}</td>
+          <td class="p-2.5 text-slate-600">${item.unit}</td>
+          <td class="p-2.5 font-mono font-bold text-emerald-700">${formatCurrency(item.unitPrice)}</td>
+          <td class="p-2.5 text-center">
+            <button onclick="deleteMasterItem('${k}')" class="text-rose-600 hover:text-rose-800 font-bold text-xs">Delete</button>
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    function addMasterItem() {
+      const name = document.getElementById('masterNameInput')?.value.trim();
+      const unit = document.getElementById('masterUnitInput')?.value;
+      const unitPrice = parseNumeric(document.getElementById('masterPriceInput')?.value);
+
+      if (!name) return;
+      masterLibrary[name] = { unit, unitPrice };
+      saveLocalStorageData();
+      updateMasterDatalist();
+      renderMasterLibrary();
+
+      if (document.getElementById('masterNameInput')) document.getElementById('masterNameInput').value = '';
+      if (document.getElementById('masterPriceInput')) document.getElementById('masterPriceInput').value = '';
+    }
+
+    function deleteMasterItem(name) {
+      delete masterLibrary[name];
+      saveLocalStorageData();
+      updateMasterDatalist();
+      renderMasterLibrary();
+    }
+
+    function openPasteExcelModal() {
+      const area = document.getElementById('excelPasteArea');
+      if (area) area.value = '';
+      document.getElementById('pastePreviewContainer')?.classList.add('hidden');
+      parsedExcelData = [];
+      document.getElementById('pasteExcelModal')?.classList.remove('hidden');
+    }
+
+    function closePasteExcelModal() {
+      document.getElementById('pasteExcelModal')?.classList.add('hidden');
+    }
+
+    function processExcelPaste() {
+      const text = document.getElementById('excelPasteArea')?.value;
+      if (!text || !text.trim()) {
+        document.getElementById('pastePreviewContainer')?.classList.add('hidden');
+        return;
+      }
+
+      const lines = text.trim().split('\n');
+      parsedExcelData = [];
+
+      lines.forEach(line => {
+        const cols = line.split('\t').map(c => c.trim());
+        if (cols.length >= 2) {
+          let name = cols[0];
+          let qtyIdx = 1;
+          let unitIdx = 2;
+          let priceIdx = 3;
+
+          if (!isNaN(parseFloat(cols[0])) && cols.length >= 3) {
+            name = cols[1];
+            qtyIdx = 2;
+            unitIdx = 3;
+            priceIdx = 4;
+          }
+
+          if (name && name.toLowerCase() !== 'ingredients' && name.toLowerCase() !== 'no') {
+            parsedExcelData.push({
+              name: name,
+              qty: parseNumeric(cols[qtyIdx] || 1),
+              unit: cols[unitIdx] || 'pcs',
+              unitPrice: parseNumeric(cols[priceIdx] || 0)
+            });
+          }
+        }
+      });
+
+      const tbody = document.getElementById('pastePreviewBody');
+      if (tbody) {
+        tbody.innerHTML = '';
+        parsedExcelData.forEach(item => {
+          const tr = document.createElement('tr');
+          tr.innerHTML = `
+            <td class="p-2 font-semibold">${item.name}</td>
+            <td class="p-2">${item.qty}</td>
+            <td class="p-2">${item.unit}</td>
+            <td class="p-2 font-mono">${formatCurrency(item.unitPrice)}</td>
+            <td class="p-2 font-mono font-bold text-right">${formatCurrency(item.qty * item.unitPrice)}</td>
+          `;
+          tbody.appendChild(tr);
+        });
+      }
+
+      document.getElementById('pastePreviewContainer')?.classList.remove('hidden');
+    }
+
+    function confirmPasteImport() {
+      if (parsedExcelData.length === 0) {
+        closePasteExcelModal();
+        return;
+      }
+
+      const modeRadio = document.querySelector('input[name="pasteMode"]:checked');
+      const mode = modeRadio ? modeRadio.value : 'append';
+      const recipe = getActiveRecipe();
+
+      if (mode === 'replace') {
+        recipe.ingredients = [...parsedExcelData];
+      } else {
+        recipe.ingredients.push(...parsedExcelData);
+      }
+
+      saveLocalStorageData();
+      renderIngredientsTable();
+      updateCalculations();
+      closePasteExcelModal();
+    }
+
+    async function saveAndSyncActiveRecipe() {
+      const recipe = getActiveRecipe();
+      saveLocalStorageData();
+
+      if (recipe.ingredients && recipe.ingredients.length > 0) {
+        recipe.ingredients.forEach(ing => {
+          const name = String(ing.name || '').trim();
+          if (name) {
+            masterLibrary[name] = {
+              unit: ing.unit || 'pcs',
+              unitPrice: parseNumeric(ing.unitPrice)
+            };
+          }
+        });
+        saveLocalStorageData();
+        updateMasterDatalist();
+      }
+
+      if (!googleWebhookUrl) {
+        showToast("Recipe Saved Locally", "Google Sheets not connected yet. Opening setup modal...", "info", 3500);
+        openGoogleSheetsModal();
+        return;
+      }
+
+      showToast(
+        "Syncing in Background...", 
+        `Saving "${recipe.name}" & pulling latest library from Google Sheets.`, 
+        "info", 
+        3000
+      );
+
+      const pushSuccess = await syncCurrentRecipeToGoogleSheets(false);
+
+      if (pushSuccess) {
+        const pullSuccess = await pullFromGoogleSheets(true);
+
+        if (pullSuccess) {
+          showToast(
+            "Sync & Auto-Pull Complete!", 
+            `"${recipe.name}" saved to Sheets & latest library pulled automatically!`, 
+            "success", 
+            4000
+          );
+        } else {
+          showToast(
+            "Recipe Saved to Sheets", 
+            `"${recipe.name}" pushed successfully, but auto-pull encountered a minor issue.`, 
+            "info", 
+            4000
+          );
+        }
+      } else {
+        showToast(
+          "Sync Error", 
+          "Failed to reach Google Sheets. Check your Webhook URL.", 
+          "error", 
+          4000
+        );
+      }
+    }
+
+    function openGoogleSheetsModal() {
+      const input = document.getElementById('googleWebhookUrlInput');
+      if (input) input.value = googleWebhookUrl;
+      document.getElementById('googleSheetsModal')?.classList.remove('hidden');
+    }
+
+    function closeGoogleSheetsModal() {
+      document.getElementById('googleSheetsModal')?.classList.add('hidden');
+    }
+
+    function saveGoogleSheetsConfig() {
+      const input = document.getElementById('googleWebhookUrlInput')?.value.trim();
+      googleWebhookUrl = input || "";
+      saveLocalStorageData();
+      updateSheetsBadge();
+      
+      if (googleWebhookUrl) {
+        showToast("URL Saved & Syncing", "Google Sheets URL saved. Pulling recipes and library automatically...", "info", 3500);
+        pullFromGoogleSheets(false);
+      } else {
+        showConfirmModal("URL Cleared", "Google Sheets Webhook URL has been cleared.", null, true);
+      }
+    }
+
+    function updateSheetsBadge() {
+      const badge = document.getElementById('gsSyncBadge');
+      if (badge) {
+        if (googleWebhookUrl) {
+          badge.className = "w-2 h-2 rounded-full bg-emerald-500 animate-pulse ring-2 ring-white";
+          badge.title = "Google Sheets Webhook Connected";
+        } else {
+          badge.className = "w-2 h-2 rounded-full bg-amber-400 ring-2 ring-white";
+          badge.title = "Google Sheets Not Configured";
+        }
+      }
+    }
+
+    function copyAppsScriptCode() {
+      const codeArea = document.getElementById('appsScriptCodeArea');
+      if (!codeArea) return;
+      codeArea.select();
+      document.execCommand('copy');
+      showConfirmModal("Copied!", "Google Apps Script code copied to clipboard.", null, true);
+    }
+
+    function prepareRecipePayload(recipe) {
+      const subtotal = recipe.ingredients.reduce((s, i) => s + (parseNumeric(i.qty) * parseNumeric(i.unitPrice)), 0);
+      const qFactorCost = subtotal * (parseNumeric(recipe.qFactor) / 100);
+      const totalFoodCost = subtotal + qFactorCost;
+      const targetFc = parseNumeric(recipe.targetFc);
+      const recommendedNetPrice = targetFc > 0 ? (totalFoodCost / (targetFc / 100)) : 0;
+      
+      const taxSvcMultiplier = (1 + (parseNumeric(recipe.servicePercent) / 100)) * (1 + (parseNumeric(recipe.taxPercent) / 100));
+      const recommendedGrossPrice = recommendedNetPrice * taxSvcMultiplier;
+
+      const projectedPrice = parseNumeric(recipe.projectedPrice);
+      let actualNetPrice = projectedPrice;
+      if (recipe.priceMode === 'gross') {
+        actualNetPrice = taxSvcMultiplier > 0 ? (projectedPrice / taxSvcMultiplier) : projectedPrice;
+      }
+      const actualFcPct = actualNetPrice > 0 ? ((totalFoodCost / actualNetPrice) * 100) : 0;
+      const grossMargin = actualNetPrice - totalFoodCost;
+
+      return {
+        id: recipe.id,
+        name: recipe.name,
+        description: recipe.description,
+        currency: currentCurrency,
+        qFactor: recipe.qFactor,
+        targetFc: recipe.targetFc,
+        servicePercent: recipe.servicePercent,
+        taxPercent: recipe.taxPercent,
+        projectedPrice: recipe.projectedPrice,
+        priceMode: recipe.priceMode,
+        subtotal: subtotal,
+        qFactorCost: qFactorCost,
+        totalFoodCost: totalFoodCost,
+        recommendedNetPrice: recommendedNetPrice,
+        recommendedGrossPrice: recommendedGrossPrice,
+        actualFcPct: actualFcPct,
+        grossMargin: grossMargin,
+        ingredients: recipe.ingredients.map((ing) => ({
+          name: ing.name || 'Unnamed Ingredient',
+          qty: parseNumeric(ing.qty),
+          unit: ing.unit || 'pcs',
+          unitPrice: parseNumeric(ing.unitPrice),
+          lineTotal: parseNumeric(ing.qty) * parseNumeric(ing.unitPrice)
+        }))
+      };
+    }
+
+    async function syncRecipeToSheetsEndpoint(payload) {
+      if (!googleWebhookUrl) {
+        openGoogleSheetsModal();
+        return false;
+      }
+
+      try {
+        await fetch(googleWebhookUrl, {
+          method: 'POST',
+          mode: 'no-cors',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        return true;
+      } catch(err) {
+        console.error("Sheets sync error:", err);
+        return false;
+      }
+    }
+
+    async function syncCurrentRecipeToGoogleSheets(showAlert = true) {
+      if (!googleWebhookUrl) {
+        openGoogleSheetsModal();
+        return false;
+      }
+
+      const activeRec = getActiveRecipe();
+      const payload = prepareRecipePayload(activeRec);
+      const success = await syncRecipeToSheetsEndpoint(payload);
+
+      if (showAlert) {
+        if (success) {
+          showConfirmModal("Synced to Google Sheets", `Recipe "${activeRec.name}" was sent to Google Sheets! Check your spreadsheet tab.`, null, true);
+        } else {
+          showConfirmModal("Sync Error", "Could not send data to Google Sheets. Please check your Webhook URL.", null, true);
+        }
+      }
+      return success;
+    }
+
+    async function syncAllRecipesToGoogleSheets() {
+      if (!googleWebhookUrl) {
+        openGoogleSheetsModal();
+        return;
+      }
+
+      let count = 0;
+      for (const rec of recipes) {
+        const payload = prepareRecipePayload(rec);
+        await syncRecipeToSheetsEndpoint(payload);
+        count++;
+      }
+
+      showConfirmModal("Batch Sync Complete", `Successfully synced ${count} recipe(s) to your Google Sheet!`, null, true);
+    }
+
+    async function pullFromGoogleSheets(silent = false) {
+      if (!googleWebhookUrl) {
+        if (!silent) openGoogleSheetsModal();
+        return false;
+      }
+
+      if (!silent) showToast("Pulling Data...", "Fetching saved recipes and Master Library from Google Sheets...", "info", 4000);
+
+      try {
+        const response = await fetch(googleWebhookUrl, { method: 'GET' });
+        const data = await response.json();
+
+        if (data.result === 'success') {
+          let importedCount = 0;
+
+          if (data.masterLibrary && Object.keys(data.masterLibrary).length > 0) {
+            masterLibrary = { ...masterLibrary, ...data.masterLibrary };
+            updateMasterDatalist();
+          }
+
+          if (data.recipes && data.recipes.length > 0) {
+            data.recipes.forEach(remoteRec => {
+              if (!remoteRec.name) return;
+              const existingIdx = recipes.findIndex(r => r.id === remoteRec.id || r.name.toLowerCase() === remoteRec.name.toLowerCase());
+              if (existingIdx >= 0) {
+                recipes[existingIdx] = { ...recipes[existingIdx], ...remoteRec };
+              } else {
+                recipes.push(remoteRec);
+              }
+              importedCount++;
+            });
+
+            if (!recipes.some(r => r.id === activeRecipeId)) {
+              activeRecipeId = recipes[0].id;
+            }
+          }
+
+          saveLocalStorageData();
+          populateRecipeDropdown();
+          renderActiveRecipe();
+
+          if (!silent) {
+            showToast(
+              "Pull Successful!",
+              `Loaded ${importedCount} recipe(s) & Master Library items from Google Sheets.`,
+              "success",
+              4000
+            );
+          }
+          return true;
+        } else {
+          if (!silent) showToast("Pull Error", "Failed to retrieve data: " + (data.error || "Unknown error"), "error", 4000);
+          return false;
+        }
+      } catch(err) {
+        console.error("Sheets pull error:", err);
+        if (!silent) showToast("Pull Error", "Could not fetch data. Verify Webhook URL & deployment access is set to 'Anyone'.", "error", 4000);
+        return false;
+      }
+    }
+
+    function showConfirmModal(title, msg, onConfirm, okOnly = false) {
+      const elTitle = document.getElementById('confirmTitle');
+      const elMsg = document.getElementById('confirmMessage');
+      if (elTitle) elTitle.textContent = title;
+      if (elMsg) elMsg.textContent = msg;
+      
+      const confirmBtn = document.getElementById('confirmActionButton');
+      const cancelBtn = document.getElementById('confirmCancelBtn');
+
+      if (confirmBtn) {
+        if (okOnly) {
+          confirmBtn.textContent = "OK";
+          confirmBtn.className = "px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl";
+          if (cancelBtn) cancelBtn.classList.add('hidden');
+        } else {
+          confirmBtn.textContent = "Confirm";
+          confirmBtn.className = "px-4 py-2 bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold rounded-xl";
+          if (cancelBtn) cancelBtn.classList.remove('hidden');
+        }
+      }
+
+      pendingConfirmAction = onConfirm;
+      document.getElementById('confirmModal')?.classList.remove('hidden');
+    }
+
+    function closeConfirmModal(accepted) {
+      document.getElementById('confirmModal')?.classList.add('hidden');
+      if (accepted && typeof pendingConfirmAction === 'function') {
+        pendingConfirmAction();
+      }
+      pendingConfirmAction = null;
+    }
+
+    function toggleExportMenu() {
+      document.getElementById('exportMenu')?.classList.toggle('hidden');
+    }
+
+    function exportToPDF() {
+      document.getElementById('exportMenu')?.classList.add('hidden');
+      window.print();
+    }
+
+    function exportToExcel() {
+      document.getElementById('exportMenu')?.classList.add('hidden');
+      const recipe = getActiveRecipe();
+
+      const subtotal = recipe.ingredients.reduce((s, i) => s + (parseNumeric(i.qty) * parseNumeric(i.unitPrice)), 0);
+      const qFactorCost = subtotal * (recipe.qFactor / 100);
+      const totalFoodCost = subtotal + qFactorCost;
+      const preliminaryPriceNet = recipe.targetFc > 0 ? (totalFoodCost / (recipe.targetFc / 100)) : 0;
+      
+      const taxSvcMultiplier = (1 + ((recipe.servicePercent || 0) / 100)) * (1 + ((recipe.taxPercent || 0) / 100));
+      const preliminaryPriceGross = preliminaryPriceNet * taxSvcMultiplier;
+
+      let actualNetPrice = 0;
+      let actualGrossPrice = 0;
+      if (recipe.priceMode === 'gross') {
+        actualGrossPrice = recipe.projectedPrice;
+        actualNetPrice = taxSvcMultiplier > 0 ? (recipe.projectedPrice / taxSvcMultiplier) : recipe.projectedPrice;
+      } else {
+        actualNetPrice = recipe.projectedPrice;
+        actualGrossPrice = recipe.projectedPrice * taxSvcMultiplier;
+      }
+
+      const actualFcPct = actualNetPrice > 0 ? ((totalFoodCost / actualNetPrice) * 100) : 0;
+      const grossMargin = actualNetPrice - totalFoodCost;
+
+      const excelData = [
+        ["Recipe Card:", recipe.name],
+        ["Description:", recipe.description],
+        ["Currency:", currentCurrency],
+        [],
+        ["#", "Ingredient Name", "Quantity", "Unit", "Unit Price", "Total Price"],
+        ...recipe.ingredients.map((ing, idx) => [
+          idx + 1,
+          ing.name,
+          parseNumeric(ing.qty),
+          ing.unit,
+          parseNumeric(ing.unitPrice),
+          parseNumeric(ing.qty) * parseNumeric(ing.unitPrice)
+        ]),
+        [],
+        ["Subtotal Ingredients:", "", "", "", "", subtotal],
+        [`Q-Factor (${recipe.qFactor}%):`, "", "", "", "", qFactorCost],
+        ["Total Food Cost:", "", "", "", "", totalFoodCost],
+        [`Recommended Price (Net):`, "", "", "", "", preliminaryPriceNet],
+        [`Service Charge (${recipe.servicePercent}%):`, "", "", "", "", preliminaryPriceNet * (recipe.servicePercent / 100)],
+        [`Government Tax (${recipe.taxPercent}%):`, "", "", "", "", (preliminaryPriceNet * (1 + recipe.servicePercent / 100)) * (recipe.taxPercent / 100)],
+        ["Recommended Selling Price (Gross Inc. Tax/Svc):", "", "", "", "", preliminaryPriceGross],
+        [],
+        [`Actual Menu Price (${recipe.priceMode.toUpperCase()}):`, "", "", "", "", recipe.projectedPrice],
+        ["Actual Net Sales Revenue:", "", "", "", "", actualNetPrice],
+        ["Actual Gross Customer Price:", "", "", "", "", actualGrossPrice],
+        ["Actual Food Cost % (on Net Revenue):", "", "", "", "", actualFcPct.toFixed(2) + "%"],
+        ["Gross Margin / Net Profit:", "", "", "", "", grossMargin]
+      ];
+
+      const ws = XLSX.utils.aoa_to_sheet(excelData);
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, "Recipe Costing");
+
+      XLSX.writeFile(wb, `${recipe.name.replace(/[^a-z0-9]/gi, '_')}_FoodCost.xlsx`);
+    }
+
+    function exportToJSON() {
+      document.getElementById('exportMenu')?.classList.add('hidden');
+      const backupData = {
+        recipes,
+        masterLibrary,
+        exportedAt: new Date().toISOString()
+      };
+
+      const blob = new Blob([JSON.stringify(backupData, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `ChefCost_Backup_${new Date().toISOString().slice(0, 10)}.json`;
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+
+    function importFromJSON(event) {
+      document.getElementById('exportMenu')?.classList.add('hidden');
+      const file = event.target.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        try {
+          const imported = JSON.parse(e.target.result);
+          if (imported.recipes && Array.isArray(imported.recipes)) {
+            recipes = imported.recipes;
+            if (imported.masterLibrary) masterLibrary = imported.masterLibrary;
+            activeRecipeId = recipes[0].id;
+
+            saveLocalStorageData();
+            updateMasterDatalist();
+            populateRecipeDropdown();
+            renderActiveRecipe();
+            showConfirmModal("Import Successful", "Your recipes and library were successfully restored!", null, true);
+          } else {
+            showConfirmModal("Invalid File", "The selected file is not a valid JSON backup.", null, true);
+          }
+        } catch(err) {
+          showConfirmModal("Import Error", "Error reading file: " + err.message, null, true);
+        }
+      };
+      reader.readAsText(file);
+    }
+  </script>
+</body>
+</html>
