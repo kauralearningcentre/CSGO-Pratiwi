@@ -1106,13 +1106,16 @@ function doPost(e) {
       try {
         const savedRecipes = localStorage.getItem('chefcost_recipes_v2');
         const savedMaster = localStorage.getItem('chefcost_master_v2');
-        const savedActive = localStorage.getItem('chefcost_active_id_v2');
         const savedWebhook = localStorage.getItem('chefcost_webhook_url_v2');
 
         if (savedRecipes) recipes = JSON.parse(savedRecipes);
         if (savedMaster) masterLibrary = JSON.parse(savedMaster);
-        if (savedActive && recipes.some(r => r.id === savedActive)) activeRecipeId = savedActive;
         if (savedWebhook) googleWebhookUrl = savedWebhook;
+
+        // Always default to the first recipe set on startup
+        if (recipes && recipes.length > 0) {
+          activeRecipeId = recipes[0].id;
+        }
       } catch(e) {
         console.warn('LocalStorage load error:', e);
       }
@@ -1932,7 +1935,8 @@ function doPost(e) {
       if (!silent) showToast("Pulling Data...", "Fetching saved recipes from Google Sheets...", "info", 3000);
 
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 12000);
+      // Increased timeout to 30 seconds to safely accommodate Google Apps Script cold starts and large sheet reads
+      const timeoutId = setTimeout(() => controller.abort(), 30000);
 
       try {
         const response = await fetch(googleWebhookUrl, { 
@@ -1982,7 +1986,8 @@ function doPost(e) {
               importedCount++;
             });
 
-            if (!recipes.some(r => r.id === activeRecipeId)) {
+            // Always display the first (default) recipe after pulling data
+            if (recipes && recipes.length > 0) {
               activeRecipeId = recipes[0].id;
             }
           }
