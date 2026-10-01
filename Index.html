@@ -39,13 +39,8 @@
     }
   </script>
 
-  <!-- Lucide Icons -->
   <script src="https://unpkg.com/lucide@latest"></script>
-
-  <!-- Chart.js -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-
-  <!-- SheetJS (xlsx) -->
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 
   <style>
@@ -129,7 +124,6 @@
 </head>
 <body class="min-h-screen text-slate-800 flex flex-col antialiased bg-slate-50/60 selection:bg-emerald-100 selection:text-emerald-900 overflow-y-auto">
 
-  <!-- Toast Notification Container -->
   <div id="toastContainer" class="fixed bottom-4 right-4 left-4 sm:left-auto z-50 flex flex-col gap-2.5 max-w-sm w-full pointer-events-none no-print"></div>
 
   <!-- Master Library Autocomplete Datalist -->
@@ -315,10 +309,54 @@
       </div>
     </div>
 
-    <!-- Financial Scorecards -->
-    <div class="grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-4">
+    <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2.5 sm:gap-4">
       
-      <!-- Recommended Selling Price Card -->
+      <!-- 1. Actual Selling Price Card -->
+      <div class="bg-gradient-to-br from-emerald-50/50 via-white to-white border border-emerald-100 rounded-2xl p-3 sm:p-4 shadow-xs print-card hover:border-emerald-300 transition-all group">
+        <div class="flex justify-between items-start">
+          <span class="text-[10px] sm:text-[11px] font-extrabold text-emerald-900/70 uppercase tracking-wider">Actual Selling Price</span>
+          <span class="p-1.5 sm:p-2 bg-emerald-100/70 text-emerald-600 rounded-lg sm:rounded-xl group-hover:scale-110 transition-transform no-print">
+            <i data-lucide="tag" class="w-3.5 h-3.5 sm:w-4 sm:h-4"></i>
+          </span>
+        </div>
+        <div id="cardActualSellingPrice" class="text-base sm:text-2xl font-black text-slate-900 mt-1 sm:mt-2 font-mono tracking-tight truncate">Rp 0</div>
+        <div class="flex flex-col mt-1.5 sm:mt-2 pt-1.5 sm:pt-2 border-t border-emerald-100/80 space-y-0.5 text-[10px] sm:text-[11px] text-slate-500">
+          <p id="cardActualSellingSubtext" class="font-medium text-slate-700 truncate">Net: Rp 0 | Gross: Rp 0</p>
+          <p class="text-[9px] sm:text-[10px] text-slate-400 hidden sm:block">Current menu selling price</p>
+        </div>
+      </div>
+
+      <!-- 2. Total Food Cost Card -->
+      <div class="bg-gradient-to-br from-slate-50 via-white to-white border border-slate-200/90 rounded-2xl p-3 sm:p-4 shadow-xs print-card hover:border-slate-300 transition-all group">
+        <div class="flex justify-between items-start">
+          <span class="text-[10px] sm:text-[11px] font-extrabold text-slate-600 uppercase tracking-wider">Food Cost</span>
+          <span class="p-1.5 sm:p-2 bg-slate-100 text-slate-600 rounded-lg sm:rounded-xl group-hover:scale-110 transition-transform no-print">
+            <i data-lucide="shopping-bag" class="w-3.5 h-3.5 sm:w-4 sm:h-4"></i>
+          </span>
+        </div>
+        <div id="cardTotalFoodCost" class="text-base sm:text-2xl font-black text-slate-900 mt-1 sm:mt-2 font-mono tracking-tight truncate">Rp 0</div>
+        <div class="flex flex-col mt-1.5 sm:mt-2 pt-1.5 sm:pt-2 border-t border-slate-100 space-y-0.5 text-[10px] sm:text-[11px] text-slate-500">
+          <p class="font-medium text-slate-700 truncate">Subtotal + Q-Factor</p>
+          <p class="text-[9px] sm:text-[10px] text-slate-400 hidden sm:block">Cost per portion yield</p>
+        </div>
+      </div>
+
+      <!-- 3. Gross Profit Margin Card -->
+      <div class="bg-gradient-to-br from-purple-50/50 via-white to-white border border-purple-100 rounded-2xl p-3 sm:p-4 shadow-xs print-card hover:border-purple-300 transition-all group">
+        <div class="flex justify-between items-start">
+          <span class="text-[10px] sm:text-[11px] font-extrabold text-purple-900/70 uppercase tracking-wider">Margin</span>
+          <span class="p-1.5 sm:p-2 bg-purple-100/70 text-purple-600 rounded-lg sm:rounded-xl group-hover:scale-110 transition-transform no-print">
+            <i data-lucide="trending-up" class="w-3.5 h-3.5 sm:w-4 sm:h-4"></i>
+          </span>
+        </div>
+        <div id="cardGrossMargin" class="text-base sm:text-2xl font-black text-purple-700 mt-1 sm:mt-2 font-mono tracking-tight truncate">Rp 0</div>
+        <div class="flex flex-col mt-1.5 sm:mt-2 pt-1.5 sm:pt-2 border-t border-purple-100/80 space-y-0.5 text-[10px] sm:text-[11px] text-slate-500">
+          <p id="cardMarginPercent" class="font-medium text-slate-700 truncate">Net Margin: 0%</p>
+          <p class="text-[9px] sm:text-[10px] text-slate-400 hidden sm:block">Profit before overhead</p>
+        </div>
+      </div>
+
+      <!-- 4. Recommended Target Price Card -->
       <div class="bg-gradient-to-br from-blue-50/50 via-white to-white border border-blue-100 rounded-2xl p-3 sm:p-4 shadow-xs print-card hover:border-blue-300 transition-all group">
         <div class="flex justify-between items-start">
           <span class="text-[10px] sm:text-[11px] font-extrabold text-blue-900/70 uppercase tracking-wider">Target Price</span>
@@ -329,52 +367,27 @@
         <div id="cardPreliminaryPrice" class="text-base sm:text-2xl font-black text-blue-700 mt-1 sm:mt-2 font-mono tracking-tight truncate">Rp 0</div>
         <div class="flex flex-col mt-1.5 sm:mt-2 pt-1.5 sm:pt-2 border-t border-blue-100/80 space-y-0.5 text-[10px] sm:text-[11px] text-slate-500">
           <p id="cardTargetGrossDisplay" class="font-medium text-slate-700 truncate">Gross: <span id="targetGrossVal" class="font-bold text-blue-800 font-mono">Rp 0</span></p>
-          <p class="text-[9px] sm:text-[10px] text-slate-400 hidden sm:block">Calculated to hit Target FC %</p>
+          <p class="text-[9px] sm:text-[10px] text-slate-400 hidden sm:block">Calculated for Target FC %</p>
         </div>
       </div>
 
-      <!-- Total Food Cost Card -->
-      <div class="bg-gradient-to-br from-emerald-50/50 via-white to-white border border-emerald-100 rounded-2xl p-3 sm:p-4 shadow-xs print-card hover:border-emerald-300 transition-all group">
+      <!-- 5. Actual Food Cost % Card -->
+      <div class="bg-gradient-to-br from-amber-50/50 via-white to-white border border-amber-100 rounded-2xl p-3 sm:p-4 shadow-xs print-card hover:border-amber-300 transition-all group">
         <div class="flex justify-between items-start">
-          <span class="text-[10px] sm:text-[11px] font-extrabold text-emerald-900/70 uppercase tracking-wider">Food Cost</span>
-          <span class="p-1.5 sm:p-2 bg-emerald-100/70 text-emerald-600 rounded-lg sm:rounded-xl group-hover:scale-110 transition-transform no-print">
-            <i data-lucide="shopping-bag" class="w-3.5 h-3.5 sm:w-4 sm:h-4"></i>
-          </span>
+          <span class="text-[10px] sm:text-[11px] font-extrabold text-amber-900/70 uppercase tracking-wider">Actual FC %</span>
+          <div class="flex items-center space-x-1.5">
+            <span id="fcBadge" class="px-1.5 py-0.5 text-[9px] sm:text-[10px] font-black rounded-full bg-slate-100 text-slate-600 border border-slate-200">
+              N/A
+            </span>
+            <span class="p-1.5 sm:p-2 bg-amber-100/70 text-amber-600 rounded-lg sm:rounded-xl group-hover:scale-110 transition-transform no-print">
+              <i data-lucide="percent" class="w-3.5 h-3.5 sm:w-4 sm:h-4"></i>
+            </span>
+          </div>
         </div>
-        <div id="cardTotalFoodCost" class="text-base sm:text-2xl font-black text-slate-900 mt-1 sm:mt-2 font-mono tracking-tight truncate">Rp 0</div>
-        <div class="flex flex-col mt-1.5 sm:mt-2 pt-1.5 sm:pt-2 border-t border-emerald-100/80 space-y-0.5 text-[10px] sm:text-[11px] text-slate-500">
-          <p class="font-medium text-slate-700 truncate">Subtotal + Q-Factor</p>
-          <p class="text-[9px] sm:text-[10px] text-slate-400 hidden sm:block">Cost per portion yield</p>
-        </div>
-      </div>
-
-      <!-- Actual Food Cost % Card -->
-      <div class="bg-white border border-slate-200/90 rounded-2xl p-3 sm:p-4 shadow-xs print-card hover:border-slate-300 transition-all group">
-        <div class="flex justify-between items-start">
-          <span class="text-[10px] sm:text-[11px] font-extrabold text-slate-500 uppercase tracking-wider">Actual FC %</span>
-          <span id="fcBadge" class="px-1.5 py-0.5 text-[9px] sm:text-[10px] font-black rounded-full bg-slate-100 text-slate-600 border border-slate-200">
-            N/A
-          </span>
-        </div>
-        <div id="cardActualFC" class="text-base sm:text-2xl font-black text-slate-900 mt-1 sm:mt-2 font-mono tracking-tight">0.0%</div>
-        <div class="flex flex-col mt-1.5 sm:mt-2 pt-1.5 sm:pt-2 border-t border-slate-100 space-y-0.5 text-[10px] sm:text-[11px] text-slate-500">
+        <div id="cardActualFC" class="text-base sm:text-2xl font-black text-slate-900 mt-1 sm:mt-2 font-mono tracking-tight truncate">0.0%</div>
+        <div class="flex flex-col mt-1.5 sm:mt-2 pt-1.5 sm:pt-2 border-t border-amber-100/80 space-y-0.5 text-[10px] sm:text-[11px] text-slate-500">
           <p id="cardFCDiff" class="font-medium text-slate-700 truncate">Target: 0%</p>
           <p class="text-[9px] sm:text-[10px] text-slate-400 hidden sm:block">Based on actual price</p>
-        </div>
-      </div>
-
-      <!-- Gross Profit Margin Card -->
-      <div class="bg-gradient-to-br from-purple-50/50 via-white to-white border border-purple-100 rounded-2xl p-3 sm:p-4 shadow-xs print-card hover:border-purple-300 transition-all group">
-        <div class="flex justify-between items-start">
-          <span class="text-[10px] sm:text-[11px] font-extrabold text-purple-900/70 uppercase tracking-wider">Gross Margin</span>
-          <span class="p-1.5 sm:p-2 bg-purple-100/70 text-purple-600 rounded-lg sm:rounded-xl group-hover:scale-110 transition-transform no-print">
-            <i data-lucide="trending-up" class="w-3.5 h-3.5 sm:w-4 sm:h-4"></i>
-          </span>
-        </div>
-        <div id="cardGrossMargin" class="text-base sm:text-2xl font-black text-purple-700 mt-1 sm:mt-2 font-mono tracking-tight truncate">Rp 0</div>
-        <div class="flex flex-col mt-1.5 sm:mt-2 pt-1.5 sm:pt-2 border-t border-purple-100/80 space-y-0.5 text-[10px] sm:text-[11px] text-slate-500">
-          <p id="cardMarginPercent" class="font-medium text-slate-700 truncate">Net Margin: 0%</p>
-          <p class="text-[9px] sm:text-[10px] text-slate-400 hidden sm:block">Profit before overhead</p>
         </div>
       </div>
 
@@ -513,9 +526,19 @@
                 Use Recommended
               </button>
             </div>
-            <div class="flex justify-between text-[10px] text-slate-500 pt-0.5">
-              <span id="priceModeHelpText">Customer Pays (Gross inc. Tax & Svc)</span>
-              <span id="calcNetPriceDisplay" class="font-semibold text-slate-700 font-mono">Net Sales: Rp 0</span>
+            
+            <!-- Dual Display: Actual Net & Actual Gross Selling Prices -->
+            <div class="grid grid-cols-2 gap-2 pt-1 text-[11px] bg-slate-50/80 p-2.5 rounded-xl border border-slate-200/80">
+              <div class="space-y-0.5">
+                <span class="text-[10px] font-bold text-slate-500 block uppercase tracking-wider">Actual Net Sales</span>
+                <span id="calcNetPriceDisplay" class="font-extrabold text-slate-800 font-mono text-xs block">Rp 0</span>
+                <span class="text-[9px] text-slate-400 block">Resto Net Revenue</span>
+              </div>
+              <div class="space-y-0.5 text-right border-l border-slate-200/80 pl-2.5">
+                <span class="text-[10px] font-bold text-slate-500 block uppercase tracking-wider">Actual Gross Price</span>
+                <span id="calcGrossPriceDisplay" class="font-extrabold text-emerald-700 font-mono text-xs block">Rp 0</span>
+                <span class="text-[9px] text-slate-400 block">Cust. Inc. Tax & Svc</span>
+              </div>
             </div>
           </div>
 
@@ -538,7 +561,6 @@
 
   </main>
 
-  <!-- Global Custom Confirmation Modal -->
   <div id="confirmModal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-xs z-50 hidden flex items-center justify-center p-4 no-print animate-in fade-in duration-150">
     <div class="bg-white border border-slate-200 rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-4">
       <h3 id="confirmTitle" class="font-bold text-slate-900 text-base">Confirmation</h3>
@@ -554,7 +576,6 @@
     </div>
   </div>
 
-  <!-- Create New Recipe Modal -->
   <div id="newRecipeModal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-xs z-50 hidden flex items-center justify-center p-4 no-print animate-in fade-in duration-150">
     <div class="bg-white border border-slate-200 rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-4">
       <div class="flex justify-between items-center border-b border-slate-100 pb-3">
@@ -583,7 +604,6 @@
     </div>
   </div>
 
-  <!-- Master Ingredient Price Library Modal -->
   <div id="masterModal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-xs z-50 hidden flex items-center justify-center p-4 no-print animate-in fade-in duration-150">
     <div class="bg-white border border-slate-200 rounded-2xl max-w-2xl w-full max-h-[85vh] flex flex-col shadow-2xl overflow-hidden">
       
@@ -598,8 +618,6 @@
       </div>
 
       <div class="p-4 space-y-4 overflow-y-auto flex-1">
-        
-        <!-- Search Input -->
         <div class="flex items-center space-x-2">
           <div class="relative flex-1">
             <i data-lucide="search" class="w-4 h-4 text-slate-400 absolute left-3 top-2.5"></i>
@@ -607,7 +625,6 @@
           </div>
         </div>
 
-        <!-- Quick Add Box -->
         <div class="bg-slate-50/80 p-3 rounded-xl border border-slate-200/80 flex flex-wrap gap-2 items-center">
           <input type="text" id="masterNameInput" placeholder="Ingredient Name (e.g. Butter)" class="flex-1 min-w-[140px] bg-white border border-slate-200 rounded-xl px-3 py-1.5 text-xs focus:outline-none focus:border-emerald-500">
           <select id="masterUnitInput" class="bg-white border border-slate-200 rounded-xl px-2 py-1.5 text-xs font-semibold focus:outline-none">
@@ -649,7 +666,6 @@
     </div>
   </div>
 
-  <!-- Excel Copy Paste Modal -->
   <div id="pasteExcelModal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-xs z-50 hidden flex items-center justify-center p-4 no-print animate-in fade-in duration-150">
     <div class="bg-white border border-slate-200 rounded-2xl max-w-2xl w-full max-h-[85vh] flex flex-col shadow-2xl overflow-hidden">
       
@@ -708,7 +724,6 @@
     </div>
   </div>
 
-  <!-- Google Sheets Integration Modal -->
   <div id="googleSheetsModal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-xs z-50 hidden flex items-center justify-center p-4 no-print animate-in fade-in duration-150">
     <div class="bg-white border border-slate-200 rounded-2xl max-w-2xl w-full max-h-[85vh] flex flex-col shadow-2xl overflow-hidden">
       
@@ -724,7 +739,6 @@
 
       <div class="p-5 space-y-4 overflow-y-auto flex-1 text-xs text-slate-700">
         
-        <!-- Webhook URL Configuration -->
         <div class="space-y-2 bg-slate-50 p-4 rounded-xl border border-slate-200">
           <label class="block font-bold text-slate-900 text-xs">Google Apps Script Web App URL:</label>
           <div class="flex items-center space-x-2">
@@ -736,7 +750,6 @@
           <p class="text-[11px] text-slate-500">Paste your deployed Apps Script URL here. Every synced recipe will create or update a sheet tab!</p>
         </div>
 
-        <!-- Manual Sync Buttons -->
         <div class="flex flex-wrap items-center justify-between gap-3 p-3 bg-emerald-50/60 border border-emerald-200/80 rounded-xl">
           <div class="space-y-0.5">
             <span class="font-bold text-emerald-950">Bi-Directional Sync Controls</span>
@@ -758,7 +771,6 @@
           </div>
         </div>
 
-        <!-- Google Sheets Apps Script Instructions -->
         <div class="space-y-3 pt-2">
           <h4 class="font-bold text-slate-900 border-b border-slate-100 pb-2 text-xs uppercase tracking-wider flex items-center justify-between">
             <span>Setup Instructions (1-Minute Setup)</span>
@@ -795,7 +807,6 @@ function doGet(e) {
     var masterLibrary = {};
     var recipes = [];
     
-    // 1. Read Master Price Library
     var masterSheet = ss.getSheetByName("Master_Price_Library");
     if (masterSheet) {
       var masterData = masterSheet.getDataRange().getValues();
@@ -810,7 +821,6 @@ function doGet(e) {
       }
     }
     
-    // 2. Read Recipe Sheets (Fast JSON metadata check)
     for (var s = 0; s < sheets.length; s++) {
       var sheet = sheets[s];
       if (sheet.getName() === "Master_Price_Library") continue;
@@ -845,7 +855,6 @@ function doPost(e) {
     var data = JSON.parse(e.postData.contents);
     var ss = SpreadsheetApp.getActiveSpreadsheet();
     
-    // --- 1. Master Price Library Sync ---
     var masterSheetName = "Master_Price_Library";
     var masterSheet = ss.getSheetByName(masterSheetName);
     if (!masterSheet) {
@@ -885,7 +894,6 @@ function doPost(e) {
       });
     }
 
-    // --- 2. Individual Recipe Sheet Sync ---
     var sheetName = (data.name || "Untitled Recipe").replace(/[:\\/?*\[\]]/g, "_").substring(0, 30);
     var sheet = ss.getSheetByName(sheetName);
     if (!sheet) {
@@ -894,19 +902,15 @@ function doPost(e) {
       sheet.clear();
     }
     
-    // Store structured JSON payload in cell Z1 for instant recovery
     sheet.getRange("Z1").setValue(JSON.stringify(data));
     
-    // Title & Info
     sheet.getRange(1, 1).setValue("Recipe: " + data.name).setFontWeight("bold").setFontSize(14);
     sheet.getRange(2, 1).setValue("Description: " + (data.description || ""));
     sheet.getRange(3, 1).setValue("Currency: " + (data.currency || "IDR"));
     
-    // Ingredients Header
     var headers = [["#", "Ingredient Name", "Quantity", "Unit", "Unit Price", "Total Cost"]];
     sheet.getRange(5, 1, 1, 6).setValues(headers).setFontWeight("bold").setBackground("#d1fae5");
     
-    // Ingredients Rows
     var rows = [];
     if (data.ingredients && data.ingredients.length > 0) {
       data.ingredients.forEach(function(ing, index) {
@@ -915,7 +919,6 @@ function doPost(e) {
       sheet.getRange(6, 1, rows.length, 6).setValues(rows);
     }
     
-    // Summary Metrics
     var startRow = 6 + (rows.length || 1) + 1;
     var summary = [
       ["Subtotal Ingredients Cost:", "", "", "", "", data.subtotal],
@@ -1035,6 +1038,8 @@ function doPost(e) {
         targetFcVal: document.getElementById('targetFcVal'),
         tableSubtotal: document.getElementById('tableSubtotal'),
         qFactorCostDisplay: document.getElementById('qFactorCostDisplay'),
+        cardActualSellingPrice: document.getElementById('cardActualSellingPrice'),
+        cardActualSellingSubtext: document.getElementById('cardActualSellingSubtext'),
         cardPreliminaryPrice: document.getElementById('cardPreliminaryPrice'),
         targetGrossVal: document.getElementById('targetGrossVal'),
         cardTotalFoodCost: document.getElementById('cardTotalFoodCost'),
@@ -1043,6 +1048,7 @@ function doPost(e) {
         cardGrossMargin: document.getElementById('cardGrossMargin'),
         cardMarginPercent: document.getElementById('cardMarginPercent'),
         calcNetPriceDisplay: document.getElementById('calcNetPriceDisplay'),
+        calcGrossPriceDisplay: document.getElementById('calcGrossPriceDisplay'),
         fcBadge: document.getElementById('fcBadge'),
         ingredientsTableBody: document.getElementById('ingredientsTableBody'),
         recipeSelect: document.getElementById('recipeSelect'),
@@ -1113,7 +1119,6 @@ function doPost(e) {
         if (savedMaster) masterLibrary = JSON.parse(savedMaster);
         if (savedWebhook) googleWebhookUrl = savedWebhook;
 
-        // Preserve last active recipe if valid, otherwise fallback to first recipe
         if (savedActive && recipes.some(r => r.id === savedActive)) {
           activeRecipeId = savedActive;
         } else if (recipes && recipes.length > 0) {
@@ -1376,17 +1381,14 @@ function doPost(e) {
     function setPriceModeUI(mode) {
       const grossBtn = document.getElementById('priceModeGrossBtn');
       const netBtn = document.getElementById('priceModeNetBtn');
-      const helpText = document.getElementById('priceModeHelpText');
 
       if (grossBtn && netBtn) {
         if (mode === 'gross') {
           grossBtn.className = "px-2 py-0.5 rounded-lg font-bold bg-white text-emerald-700 shadow-xs";
           netBtn.className = "px-2 py-0.5 rounded-lg font-bold text-slate-500 hover:text-slate-800";
-          if (helpText) helpText.textContent = "Customer Pays (Gross inc. Tax & Svc)";
         } else {
           netBtn.className = "px-2 py-0.5 rounded-lg font-bold bg-white text-emerald-700 shadow-xs";
           grossBtn.className = "px-2 py-0.5 rounded-lg font-bold text-slate-500 hover:text-slate-800";
-          if (helpText) helpText.textContent = "Net Sales Revenue (Excl. Tax & Svc)";
         }
       }
     }
@@ -1438,8 +1440,10 @@ function doPost(e) {
       let actualGross = recipe.projectedPrice;
 
       if (recipe.priceMode === 'gross') {
+        actualGross = recipe.projectedPrice;
         actualNet = taxSvcMultiplier > 0 ? (recipe.projectedPrice / taxSvcMultiplier) : recipe.projectedPrice;
       } else {
+        actualNet = recipe.projectedPrice;
         actualGross = recipe.projectedPrice * taxSvcMultiplier;
       }
 
@@ -1449,6 +1453,8 @@ function doPost(e) {
 
       if (domCache.tableSubtotal) domCache.tableSubtotal.textContent = formatCurrency(subtotal);
       if (domCache.qFactorCostDisplay) domCache.qFactorCostDisplay.textContent = formatCurrency(qFactorCost);
+      if (domCache.cardActualSellingPrice) domCache.cardActualSellingPrice.textContent = formatCurrency(recipe.projectedPrice);
+      if (domCache.cardActualSellingSubtext) domCache.cardActualSellingSubtext.textContent = `Net: ${formatCurrency(actualNet)} | Gross: ${formatCurrency(actualGross)}`;
       if (domCache.cardPreliminaryPrice) domCache.cardPreliminaryPrice.textContent = formatCurrency(recommendedNet);
       if (domCache.targetGrossVal) domCache.targetGrossVal.textContent = formatCurrency(recommendedGross);
       if (domCache.cardTotalFoodCost) domCache.cardTotalFoodCost.textContent = formatCurrency(totalFoodCost);
@@ -1456,7 +1462,9 @@ function doPost(e) {
       if (domCache.cardFCDiff) domCache.cardFCDiff.textContent = "Target Benchmark: " + recipe.targetFc + "%";
       if (domCache.cardGrossMargin) domCache.cardGrossMargin.textContent = formatCurrency(grossMargin);
       if (domCache.cardMarginPercent) domCache.cardMarginPercent.textContent = "Net Profit Margin: " + marginPct.toFixed(1) + "%";
-      if (domCache.calcNetPriceDisplay) domCache.calcNetPriceDisplay.textContent = "Net Sales: " + formatCurrency(actualNet);
+      
+      if (domCache.calcNetPriceDisplay) domCache.calcNetPriceDisplay.textContent = formatCurrency(actualNet);
+      if (domCache.calcGrossPriceDisplay) domCache.calcGrossPriceDisplay.textContent = formatCurrency(actualGross);
 
       if (domCache.fcBadge) {
         if (recipe.targetFc > 0 && actualFcPct > 0) {
@@ -1793,10 +1801,10 @@ function doPost(e) {
       updateSheetsBadge();
       
       if (googleWebhookUrl) {
-        showToast("URL Saved & Syncing", "Google Sheets URL saved. Pulling recipes and library automatically...", "info", 3500);
+        showToast("URL Saved & Syncing", "Google Sheets URL saved. Pulling recipes automatically...", "info", 3500);
         pullFromGoogleSheets(false);
       } else {
-        showConfirmModal("URL Cleared", "Google Sheets Webhook URL has been cleared.", null, true);
+        showToast("URL Cleared", "Google Sheets Webhook URL has been cleared.", "info", 3000);
       }
     }
 
@@ -1818,7 +1826,7 @@ function doPost(e) {
       if (!codeArea) return;
       codeArea.select();
       document.execCommand('copy');
-      showConfirmModal("Copied!", "Google Apps Script code copied to clipboard.", null, true);
+      showToast("Copied!", "Google Apps Script code copied to clipboard.", "success", 2500);
     }
 
     function prepareRecipePayload(recipe) {
@@ -1833,9 +1841,16 @@ function doPost(e) {
 
       const projectedPrice = parseNumeric(recipe.projectedPrice);
       let actualNetPrice = projectedPrice;
+      let actualGrossPrice = projectedPrice;
+
       if (recipe.priceMode === 'gross') {
+        actualGrossPrice = projectedPrice;
         actualNetPrice = taxSvcMultiplier > 0 ? (projectedPrice / taxSvcMultiplier) : projectedPrice;
+      } else {
+        actualNetPrice = projectedPrice;
+        actualGrossPrice = projectedPrice * taxSvcMultiplier;
       }
+
       const actualFcPct = actualNetPrice > 0 ? ((totalFoodCost / actualNetPrice) * 100) : 0;
       const grossMargin = actualNetPrice - totalFoodCost;
 
@@ -1855,6 +1870,8 @@ function doPost(e) {
         totalFoodCost: totalFoodCost,
         recommendedNetPrice: recommendedNetPrice,
         recommendedGrossPrice: recommendedGrossPrice,
+        actualNetPrice: actualNetPrice,
+        actualGrossPrice: actualGrossPrice,
         actualFcPct: actualFcPct,
         grossMargin: grossMargin,
         ingredients: recipe.ingredients.map((ing) => ({
@@ -1899,9 +1916,9 @@ function doPost(e) {
 
       if (showAlert) {
         if (success) {
-          showConfirmModal("Synced to Google Sheets", `Recipe "${activeRec.name}" was sent to Google Sheets! Check your spreadsheet tab.`, null, true);
+          showToast("Synced to Google Sheets", `Recipe "${activeRec.name}" sent to Google Sheets!`, "success", 3000);
         } else {
-          showConfirmModal("Sync Error", "Could not send data to Google Sheets. Please check your Webhook URL.", null, true);
+          showToast("Sync Error", "Could not send data to Google Sheets. Check your Webhook URL.", "error", 4000);
         }
       }
       return success;
@@ -1920,7 +1937,7 @@ function doPost(e) {
         count++;
       }
 
-      showConfirmModal("Batch Sync Complete", `Successfully synced ${count} recipe(s) to your Google Sheet!`, null, true);
+      showToast("Batch Sync Complete", `Successfully synced ${count} recipe(s) to your Google Sheet!`, "success", 3500);
     }
 
     async function pullFromGoogleSheets(silent = false) {
@@ -1938,7 +1955,6 @@ function doPost(e) {
       if (!silent) showToast("Pulling Data...", "Fetching saved recipes from Google Sheets...", "info", 3000);
 
       const controller = new AbortController();
-      // Increased timeout to 30 seconds to safely accommodate Google Apps Script cold starts and large sheet reads
       const timeoutId = setTimeout(() => controller.abort(), 30000);
 
       try {
@@ -1989,10 +2005,6 @@ function doPost(e) {
               importedCount++;
             });
 
-            // Clean up any unedited temporary blank recipes to keep list tidy
-            recipes = recipes.filter(r => (r.ingredients && r.ingredients.length > 0) || (r.name && r.name !== "New Blank Recipe" && r.name !== "My First Recipe"));
-
-            // Create a fresh blank recipe card as default active view to encourage new data entry
             const newBlankId = "rec_blank_" + Date.now();
             recipes.unshift({
               id: newBlankId,
@@ -2017,7 +2029,7 @@ function doPost(e) {
           if (!silent) {
             showToast(
               "Pull Successful!",
-              `Loaded ${importedCount} recipe(s) & Master Library items. Displaying new blank recipe by default.`,
+              `Loaded ${importedCount} recipe(s) & Master Library. Displaying new blank recipe by default.`,
               "success",
               3500
             );
@@ -2070,15 +2082,16 @@ function doPost(e) {
 
       showToast(
         "Syncing in Background...", 
-        `Saving "${recipe.name}" & updating Google Sheets in background.`, 
+        `Saving "${recipe.name}" & updating Google Sheets...`, 
         "info", 
         2500
       );
 
       syncCurrentRecipeToGoogleSheets(false).then(pushSuccess => {
         if (pushSuccess) {
-          showToast("Saved to Sheets", `"${recipe.name}" pushed successfully!`, "success", 3000);
-          pullFromGoogleSheets(true);
+          pullFromGoogleSheets(true).then(() => {
+            showToast("Sync Complete", `"${recipe.name}" pushed and library refreshed successfully!`, "success", 3000);
+          });
         } else {
           showToast("Sync Error", "Failed to reach Google Sheets. Check your Webhook URL.", "error", 4000);
         }
