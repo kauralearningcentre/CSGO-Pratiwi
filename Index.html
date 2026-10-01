@@ -56,10 +56,11 @@
       font-family: 'Inter', sans-serif;
       -webkit-font-smoothing: antialiased;
       -webkit-tap-highlight-color: transparent;
+      contain: layout style;
     }
 
     input, select, textarea, button {
-      transition: all 0.15s ease-in-out;
+      transition: border-color 0.15s ease, background-color 0.15s ease, box-shadow 0.15s ease;
     }
 
     @media (max-width: 640px) {
@@ -174,17 +175,12 @@
           </select>
         </div>
 
-        <!-- Unified Save & Sync Button -->
-        <div class="inline-flex rounded-xl shadow-md shadow-emerald-600/25 ring-1 ring-emerald-500/30 overflow-hidden bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-500 shrink-0">
-          <button onclick="saveAndSyncActiveRecipe()" class="px-2.5 sm:px-3.5 py-1.5 text-white text-[11px] sm:text-xs font-black transition-all flex items-center space-x-1 sm:space-x-1.5 active:scale-95 hover:bg-white/10" title="Save recipe & sync to Google Sheets">
-            <i data-lucide="cloud-upload" class="w-3.5 h-3.5 sm:w-4 sm:h-4"></i>
-            <span>Save & Sync</span>
-            <span id="gsSyncBadge" class="w-2 h-2 rounded-full bg-amber-300 ring-2 ring-white/80 shrink-0 ml-0.5"></span>
-          </button>
-          <button onclick="openGoogleSheetsModal()" class="px-1.5 sm:px-2 py-1.5 text-emerald-100 hover:text-white hover:bg-white/20 border-l border-emerald-400/30 transition-all flex items-center justify-center" title="Google Sheets Setup">
-            <i data-lucide="settings" class="w-3.5 h-3.5"></i>
-          </button>
-        </div>
+        <!-- Google Sheets Settings Button -->
+        <button onclick="openGoogleSheetsModal()" class="px-2.5 sm:px-3 py-1.5 bg-white hover:bg-slate-50 text-slate-700 text-[11px] sm:text-xs font-semibold rounded-xl transition-all border border-slate-200 shadow-xs flex items-center space-x-1.5 shrink-0" title="Google Sheets Live Sync Settings">
+          <i data-lucide="settings" class="w-3.5 h-3.5 sm:w-4 sm:h-4 text-emerald-600"></i>
+          <span class="hidden sm:inline">Sheets Settings</span>
+          <span id="gsSyncBadge" class="w-2 h-2 rounded-full bg-amber-400 shrink-0" title="Sync Status"></span>
+        </button>
 
         <!-- Master Price Library Modal Button -->
         <button onclick="openMasterModal()" class="px-2.5 sm:px-3 py-1.5 bg-white hover:bg-slate-50 text-slate-700 text-[11px] sm:text-xs font-semibold rounded-xl transition-all border border-slate-200 shadow-xs flex items-center space-x-1 shrink-0">
@@ -819,21 +815,50 @@ function doGet(e) {
       var rawJson = sheet.getRange("Z1").getValue();
       if (rawJson && typeof rawJson === "string" && rawJson.charAt(0) === "{") {
         try {
-          recipes.push(JSON.parse(rawJson));
-          continue;
+          var parsed = JSON.parse(rawJson);
+          if (parsed && parsed.name) {
+            recipes.push(parsed);
+            continue;
+          }
         } catch(err) {}
       }
       
+      // Fallback: Read visually from sheet summary rows if Z1 metadata is missing
       var name = sheet.getRange(1, 1).getValue().toString().replace("Recipe: ", "").trim();
       var desc = sheet.getRange(2, 1).getValue().toString().replace("Description: ", "").trim();
+      var currency = sheet.getRange(3, 1).getValue().toString().replace("Currency: ", "").trim() || "IDR";
       if (!name) name = sheet.getName();
       
-      var lastRow = sheet.getLastRow();
       var ingredients = [];
-      if (lastRow >= 6) {
-        var dataRange = sheet.getRange(6, 1, Math.min(lastRow - 5, 50), 6).getValues();
-        for (var r = 0; r < dataRange.length; r++) {
-          var row = dataRange[r];
+      var qFactor = 10;
+      var targetFc = 0;
+      var servicePercent = 10;
+      var taxPercent = 11;
+      var priceMode = "gross";
+      var projectedPrice = 0;
+
+      var allValues = sheet.getDataRange().getValues();
+      for (var r = 0; r < allValues.length; r++) {
+        var label = String(allValues[r][0] || "").trim();
+        var val = allValues[r][5];
+        if (label.indexOf("Q-Factor %") === 0) {
+          qFactor = parseFloat(String(val).replace("%", "")) || 10;
+        } else if (label.indexOf("Target Food Cost %") === 0) {
+          targetFc = parseFloat(String(val).replace("%", "")) || 0;
+        } else if (label.indexOf("Service Charge %") === 0) {
+          servicePercent = parseFloat(String(val).replace("%", "")) || 10;
+        } else if (label.indexOf("Government Tax %") === 0) {
+          taxPercent = parseFloat(String(val).replace("%", "")) || 11;
+        } else if (label.indexOf("Price Mode") === 0) {
+          priceMode = String(val).toLowerCase().trim() || "gross";
+        } else if (label.indexOf("Actual Selling Price") === 0) {
+          projectedPrice = parseFloat(val) || 0;
+        }
+      }
+
+      if (allValues.length >= 6) {
+        for (var r = 5; r < allValues.length; r++) {
+          var row = allValues[r];
           var ingName = String(row[1] || "").trim();
           if (!ingName || ingName.indexOf("Subtotal") === 0) break;
           ingredients.push({
@@ -849,12 +874,13 @@ function doGet(e) {
         id: "rec_sheet_" + s + "_" + Date.now(),
         name: name,
         description: desc,
-        qFactor: 10,
-        targetFc: 0,
-        servicePercent: 10,
-        taxPercent: 11,
-        priceMode: "gross",
-        projectedPrice: 0,
+        currency: currency,
+        qFactor: qFactor,
+        targetFc: targetFc,
+        servicePercent: servicePercent,
+        taxPercent: taxPercent,
+        priceMode: priceMode,
+        projectedPrice: projectedPrice,
         ingredients: ingredients
       });
     }
@@ -951,9 +977,13 @@ function doPost(e) {
     var startRow = 6 + (rows.length || 1) + 1;
     var summary = [
       ["Subtotal Ingredients Cost:", "", "", "", "", data.subtotal],
-      ["Q-Factor Cost (" + data.qFactor + "%):", "", "", "", "", data.qFactorCost],
+      ["Q-Factor %:", "", "", "", "", data.qFactor + "%"],
+      ["Q-Factor Cost:", "", "", "", "", data.qFactorCost],
       ["Total Food Cost:", "", "", "", "", data.totalFoodCost],
       ["Target Food Cost %:", "", "", "", "", data.targetFc + "%"],
+      ["Service Charge %:", "", "", "", "", data.servicePercent + "%"],
+      ["Government Tax %:", "", "", "", "", data.taxPercent + "%"],
+      ["Price Mode:", "", "", "", "", data.priceMode],
       ["Recommended Price (Net):", "", "", "", "", data.recommendedNetPrice],
       ["Recommended Price (Gross):", "", "", "", "", data.recommendedGrossPrice],
       ["Actual Selling Price:", "", "", "", "", data.projectedPrice],
@@ -984,10 +1014,6 @@ function doPost(e) {
   </div>
 
   <script>
-    /* ==========================================================================
-       Application State & Initial Setup
-       ========================================================================== */
-    
     let masterLibrary = {};
 
     const STANDARD_UNITS = [
@@ -1000,6 +1026,7 @@ function doPost(e) {
         id: "rec_1",
         name: "My First Recipe",
         description: "Add ingredients below to calculate food cost and recommended selling price.",
+        currency: "IDR",
         qFactor: 10,
         targetFc: 0,
         servicePercent: 10,
@@ -1016,6 +1043,7 @@ function doPost(e) {
     let pendingConfirmAction = null;
     let googleWebhookUrl = "";
     let parsedExcelData = [];
+    let domCache = {};
 
     const currencies = {
       IDR: { symbol: "Rp", rate: 1, decimals: 0 },
@@ -1024,8 +1052,66 @@ function doPost(e) {
       GBP: { symbol: "£", rate: 0.000050, decimals: 2 }
     };
 
+    // Asynchronous Debounce utility to optimize rapid keystrokes & state saving
+    function debounce(fn, delay = 300) {
+      let timer = null;
+      return function (...args) {
+        clearTimeout(timer);
+        timer = setTimeout(() => fn.apply(this, args), delay);
+      };
+    }
+
+    // Cached LocalStorage save function
+    const debouncedSaveLocalStorage = debounce(() => {
+      saveLocalStorageDataImmediate();
+    }, 300);
+
+    function saveLocalStorageData() {
+      debouncedSaveLocalStorage();
+    }
+
+    function saveLocalStorageDataImmediate() {
+      try {
+        localStorage.setItem('chefcost_recipes_v2', JSON.stringify(recipes));
+        localStorage.setItem('chefcost_master_v2', JSON.stringify(masterLibrary));
+        localStorage.setItem('chefcost_active_id_v2', activeRecipeId);
+        localStorage.setItem('chefcost_webhook_url_v2', googleWebhookUrl);
+      } catch(e) {
+        console.warn('LocalStorage save error:', e);
+      }
+    }
+
+    function initDomCache() {
+      domCache = {
+        recipeTitleInput: document.getElementById('recipeTitleInput'),
+        recipeDescInput: document.getElementById('recipeDescInput'),
+        qFactorInput: document.getElementById('qFactorInput'),
+        targetFcInput: document.getElementById('targetFcInput'),
+        servicePercentInput: document.getElementById('servicePercentInput'),
+        taxPercentInput: document.getElementById('taxPercentInput'),
+        projectedPriceInput: document.getElementById('projectedPriceInput'),
+        qFactorVal: document.getElementById('qFactorVal'),
+        targetFcVal: document.getElementById('targetFcVal'),
+        tableSubtotal: document.getElementById('tableSubtotal'),
+        qFactorCostDisplay: document.getElementById('qFactorCostDisplay'),
+        cardPreliminaryPrice: document.getElementById('cardPreliminaryPrice'),
+        targetGrossVal: document.getElementById('targetGrossVal'),
+        cardTotalFoodCost: document.getElementById('cardTotalFoodCost'),
+        cardActualFC: document.getElementById('cardActualFC'),
+        cardFCDiff: document.getElementById('cardFCDiff'),
+        cardGrossMargin: document.getElementById('cardGrossMargin'),
+        cardMarginPercent: document.getElementById('cardMarginPercent'),
+        calcNetPriceDisplay: document.getElementById('calcNetPriceDisplay'),
+        fcBadge: document.getElementById('fcBadge'),
+        ingredientsTableBody: document.getElementById('ingredientsTableBody'),
+        recipeSelect: document.getElementById('recipeSelect'),
+        masterIngredientsList: document.getElementById('masterIngredientsList')
+      };
+    }
+
     window.addEventListener('DOMContentLoaded', () => {
       if (window.lucide) lucide.createIcons();
+      initDomCache();
       loadLocalStorageData();
       updateMasterDatalist();
       populateRecipeDropdown();
@@ -1033,7 +1119,6 @@ function doPost(e) {
       initChart();
       updateSheetsBadge();
 
-      // Attach confirmation modal listener safely
       const confirmBtn = document.getElementById('confirmActionButton');
       if (confirmBtn) {
         confirmBtn.addEventListener('click', () => {
@@ -1045,7 +1130,6 @@ function doPost(e) {
         pullFromGoogleSheets(true);
       }
 
-      // Click outside listener for export menu
       document.addEventListener('click', (e) => {
         const drop = document.getElementById('exportMenu');
         const btn = document.getElementById('exportDropdownBtn');
@@ -1055,54 +1139,20 @@ function doPost(e) {
       });
     });
 
-    function showToast(title, message, type = 'info', duration = 3500) {
-      const container = document.getElementById('toastContainer');
-      if (!container) return;
-
-      const toast = document.createElement('div');
-      toast.className = `pointer-events-auto flex items-start space-x-3 p-3.5 rounded-2xl shadow-xl border backdrop-blur-md transition-all transform duration-300 translate-y-4 opacity-0 text-xs ${
-        type === 'success' 
-          ? 'bg-emerald-900/90 border-emerald-700 text-white' 
-          : type === 'error'
-          ? 'bg-rose-900/90 border-rose-700 text-white'
-          : 'bg-slate-900/90 border-slate-700 text-white'
-      }`;
-
-      const icon = type === 'success' ? 'check-circle-2' : type === 'error' ? 'alert-triangle' : 'refresh-cw';
-      const iconSpin = type === 'info' ? 'animate-spin' : '';
-
-      toast.innerHTML = `
-        <div class="shrink-0 mt-0.5 text-emerald-400">
-          <i data-lucide="${icon}" class="w-4 h-4 ${iconSpin}"></i>
-        </div>
-        <div class="flex-1 space-y-0.5">
-          <p class="font-bold tracking-tight">${title}</p>
-          <p class="text-[11px] opacity-80 leading-relaxed">${message}</p>
-        </div>
-        <button onclick="this.parentElement.remove()" class="opacity-60 hover:opacity-100 p-0.5 shrink-0">
-          <i data-lucide="x" class="w-3.5 h-3.5"></i>
-        </button>
-      `;
-
-      container.appendChild(toast);
-      if (window.lucide) lucide.createIcons();
-
-      requestAnimationFrame(() => {
-        toast.classList.remove('translate-y-4', 'opacity-0');
-      });
-
-      setTimeout(() => {
-        toast.classList.add('opacity-0', 'translate-y-2');
-        setTimeout(() => toast.remove(), 300);
-      }, duration);
-    }
-
     function parseNumeric(val) {
       if (typeof val === 'number') return isNaN(val) ? 0 : val;
       if (!val) return 0;
       let cleaned = String(val).trim().replace(/,/g, '.');
       let parsed = parseFloat(cleaned);
       return isNaN(parsed) ? 0 : parsed;
+    }
+
+    function parsePercentage(val) {
+      let num = parseNumeric(val);
+      if (num > 0 && num <= 1) {
+        num = Math.round(num * 10000) / 100;
+      }
+      return num;
     }
 
     function formatCurrency(val) {
@@ -1116,17 +1166,6 @@ function doPost(e) {
 
     function getActiveRecipe() {
       return recipes.find(r => r.id === activeRecipeId) || recipes[0];
-    }
-
-    function saveLocalStorageData() {
-      try {
-        localStorage.setItem('chefcost_recipes_v2', JSON.stringify(recipes));
-        localStorage.setItem('chefcost_master_v2', JSON.stringify(masterLibrary));
-        localStorage.setItem('chefcost_active_id_v2', activeRecipeId);
-        localStorage.setItem('chefcost_webhook_url_v2', googleWebhookUrl);
-      } catch(e) {
-        console.warn('LocalStorage save error:', e);
-      }
     }
 
     function loadLocalStorageData() {
@@ -1146,14 +1185,16 @@ function doPost(e) {
     }
 
     function updateMasterDatalist() {
-      const datalist = document.getElementById('masterIngredientsList');
+      const datalist = domCache.masterIngredientsList || document.getElementById('masterIngredientsList');
       if (!datalist) return;
-      datalist.innerHTML = '';
+      const fragment = document.createDocumentFragment();
       Object.keys(masterLibrary).forEach(name => {
         const opt = document.createElement('option');
         opt.value = name;
-        datalist.appendChild(opt);
+        fragment.appendChild(opt);
       });
+      datalist.innerHTML = '';
+      datalist.appendChild(fragment);
     }
 
     function confirmResetAll() {
@@ -1172,6 +1213,7 @@ function doPost(e) {
               id: "rec_1",
               name: "My First Recipe",
               description: "Add ingredients below to calculate food cost and recommended selling price.",
+              currency: "IDR",
               qFactor: 10,
               targetFc: 0,
               servicePercent: 10,
@@ -1182,7 +1224,7 @@ function doPost(e) {
             }
           ];
 
-          saveLocalStorageData();
+          saveLocalStorageDataImmediate();
           updateMasterDatalist();
           populateRecipeDropdown();
           renderActiveRecipe();
@@ -1191,21 +1233,23 @@ function doPost(e) {
     }
 
     function populateRecipeDropdown() {
-      const select = document.getElementById('recipeSelect');
+      const select = domCache.recipeSelect || document.getElementById('recipeSelect');
       if (!select) return;
-      select.innerHTML = '';
+      const fragment = document.createDocumentFragment();
       recipes.forEach(r => {
         const opt = document.createElement('option');
         opt.value = r.id;
         opt.textContent = r.name;
         if (r.id === activeRecipeId) opt.selected = true;
-        select.appendChild(opt);
+        fragment.appendChild(opt);
       });
+      select.innerHTML = '';
+      select.appendChild(fragment);
     }
 
     function switchRecipe(id) {
       activeRecipeId = id;
-      saveLocalStorageData();
+      saveLocalStorageDataImmediate();
       renderActiveRecipe();
     }
 
@@ -1213,21 +1257,21 @@ function doPost(e) {
       const recipe = getActiveRecipe();
       if (!recipe) return;
 
-      const titleInput = document.getElementById('recipeTitleInput');
-      const descInput = document.getElementById('recipeDescInput');
-      const qFactorInput = document.getElementById('qFactorInput');
-      const targetFcInput = document.getElementById('targetFcInput');
-      const serviceInput = document.getElementById('servicePercentInput');
-      const taxInput = document.getElementById('taxPercentInput');
-      const projectedInput = document.getElementById('projectedPriceInput');
+      if (domCache.recipeTitleInput) domCache.recipeTitleInput.value = recipe.name || '';
+      if (domCache.recipeDescInput) domCache.recipeDescInput.value = recipe.description || '';
+      if (domCache.qFactorInput) domCache.qFactorInput.value = recipe.qFactor ?? 10;
+      if (domCache.targetFcInput) domCache.targetFcInput.value = recipe.targetFc ?? 0;
+      if (domCache.servicePercentInput) domCache.servicePercentInput.value = recipe.servicePercent ?? 10;
+      if (domCache.taxPercentInput) domCache.taxPercentInput.value = recipe.taxPercent ?? 11;
+      if (domCache.projectedPriceInput) domCache.projectedPriceInput.value = recipe.projectedPrice ?? 0;
 
-      if (titleInput) titleInput.value = recipe.name || '';
-      if (descInput) descInput.value = recipe.description || '';
-      if (qFactorInput) qFactorInput.value = recipe.qFactor ?? 10;
-      if (targetFcInput) targetFcInput.value = recipe.targetFc ?? 0;
-      if (serviceInput) serviceInput.value = recipe.servicePercent ?? 10;
-      if (taxInput) taxInput.value = recipe.taxPercent ?? 11;
-      if (projectedInput) projectedInput.value = recipe.projectedPrice ?? 0;
+      if (recipe.currency && currencies[recipe.currency]) {
+        currentCurrency = recipe.currency;
+        const desktopSelect = document.getElementById('currencySelect');
+        const mobileSelect = document.getElementById('currencySelectMobile');
+        if (desktopSelect) desktopSelect.value = currentCurrency;
+        if (mobileSelect) mobileSelect.value = currentCurrency;
+      }
 
       setPriceModeUI(recipe.priceMode || 'gross');
       renderIngredientsTable();
@@ -1248,21 +1292,25 @@ function doPost(e) {
       saveLocalStorageData();
     }
 
-    function changeCurrency(val) {
+    function changeCurrency(val, updateRecipe = true) {
       currentCurrency = val;
       const desktopSelect = document.getElementById('currencySelect');
       const mobileSelect = document.getElementById('currencySelectMobile');
       if (desktopSelect) desktopSelect.value = val;
       if (mobileSelect) mobileSelect.value = val;
-      renderActiveRecipe();
+
+      if (updateRecipe) {
+        const recipe = getActiveRecipe();
+        if (recipe) recipe.currency = val;
+        saveLocalStorageDataImmediate();
+        renderActiveRecipe();
+      }
     }
 
     function renderIngredientsTable() {
       const recipe = getActiveRecipe();
-      const tbody = document.getElementById('ingredientsTableBody');
+      const tbody = domCache.ingredientsTableBody || document.getElementById('ingredientsTableBody');
       if (!tbody) return;
-
-      tbody.innerHTML = '';
 
       if (!recipe.ingredients || recipe.ingredients.length === 0) {
         tbody.innerHTML = `
@@ -1274,6 +1322,8 @@ function doPost(e) {
         `;
         return;
       }
+
+      const fragment = document.createDocumentFragment();
 
       recipe.ingredients.forEach((ing, index) => {
         const qty = parseNumeric(ing.qty);
@@ -1320,8 +1370,11 @@ function doPost(e) {
           </td>
         `;
 
-        tbody.appendChild(tr);
+        fragment.appendChild(tr);
       });
+
+      tbody.innerHTML = '';
+      tbody.appendChild(fragment);
 
       if (window.lucide) lucide.createIcons();
     }
@@ -1415,26 +1468,23 @@ function doPost(e) {
       const recGross = recNet * taxSvcMultiplier;
 
       recipe.projectedPrice = recipe.priceMode === 'gross' ? Math.round(recGross) : Math.round(recNet);
-      const input = document.getElementById('projectedPriceInput');
-      if (input) input.value = recipe.projectedPrice;
+      if (domCache.projectedPriceInput) domCache.projectedPriceInput.value = recipe.projectedPrice;
 
-      saveLocalStorageData();
+      saveLocalStorageDataImmediate();
       updateCalculations();
     }
 
     function updateCalculations() {
       const recipe = getActiveRecipe();
 
-      recipe.qFactor = parseNumeric(document.getElementById('qFactorInput')?.value);
-      recipe.targetFc = parseNumeric(document.getElementById('targetFcInput')?.value);
-      recipe.servicePercent = parseNumeric(document.getElementById('servicePercentInput')?.value);
-      recipe.taxPercent = parseNumeric(document.getElementById('taxPercentInput')?.value);
-      recipe.projectedPrice = parseNumeric(document.getElementById('projectedPriceInput')?.value);
+      recipe.qFactor = parsePercentage(domCache.qFactorInput?.value);
+      recipe.targetFc = parsePercentage(domCache.targetFcInput?.value);
+      recipe.servicePercent = parsePercentage(domCache.servicePercentInput?.value);
+      recipe.taxPercent = parsePercentage(domCache.taxPercentInput?.value);
+      recipe.projectedPrice = parseNumeric(domCache.projectedPriceInput?.value);
 
-      const qFactorVal = document.getElementById('qFactorVal');
-      const targetFcVal = document.getElementById('targetFcVal');
-      if (qFactorVal) qFactorVal.textContent = recipe.qFactor + "%";
-      if (targetFcVal) targetFcVal.textContent = recipe.targetFc + "%";
+      if (domCache.qFactorVal) domCache.qFactorVal.textContent = recipe.qFactor + "%";
+      if (domCache.targetFcVal) domCache.targetFcVal.textContent = recipe.targetFc + "%";
 
       const subtotal = recipe.ingredients.reduce((s, i) => s + (parseNumeric(i.qty) * parseNumeric(i.unitPrice)), 0);
       const qFactorCost = subtotal * (recipe.qFactor / 100);
@@ -1457,41 +1507,29 @@ function doPost(e) {
       const grossMargin = actualNet - totalFoodCost;
       const marginPct = actualNet > 0 ? ((grossMargin / actualNet) * 100) : 0;
 
-      const elSub = document.getElementById('tableSubtotal');
-      const elQCost = document.getElementById('qFactorCostDisplay');
-      const elCardTargetPrice = document.getElementById('cardPreliminaryPrice');
-      const elCardTargetGross = document.getElementById('targetGrossVal');
-      const elCardTotalFC = document.getElementById('cardTotalFoodCost');
-      const elCardActualFC = document.getElementById('cardActualFC');
-      const elCardFCDiff = document.getElementById('cardFCDiff');
-      const elCardGrossMargin = document.getElementById('cardGrossMargin');
-      const elCardMarginPercent = document.getElementById('cardMarginPercent');
-      const elNetSalesDisplay = document.getElementById('calcNetPriceDisplay');
+      if (domCache.tableSubtotal) domCache.tableSubtotal.textContent = formatCurrency(subtotal);
+      if (domCache.qFactorCostDisplay) domCache.qFactorCostDisplay.textContent = formatCurrency(qFactorCost);
+      if (domCache.cardPreliminaryPrice) domCache.cardPreliminaryPrice.textContent = formatCurrency(recommendedNet);
+      if (domCache.targetGrossVal) domCache.targetGrossVal.textContent = formatCurrency(recommendedGross);
+      if (domCache.cardTotalFoodCost) domCache.cardTotalFoodCost.textContent = formatCurrency(totalFoodCost);
+      if (domCache.cardActualFC) domCache.cardActualFC.textContent = actualFcPct.toFixed(1) + "%";
+      if (domCache.cardFCDiff) domCache.cardFCDiff.textContent = "Target Benchmark: " + recipe.targetFc + "%";
+      if (domCache.cardGrossMargin) domCache.cardGrossMargin.textContent = formatCurrency(grossMargin);
+      if (domCache.cardMarginPercent) domCache.cardMarginPercent.textContent = "Net Profit Margin: " + marginPct.toFixed(1) + "%";
+      if (domCache.calcNetPriceDisplay) domCache.calcNetPriceDisplay.textContent = "Net Sales: " + formatCurrency(actualNet);
 
-      if (elSub) elSub.textContent = formatCurrency(subtotal);
-      if (elQCost) elQCost.textContent = formatCurrency(qFactorCost);
-      if (elCardTargetPrice) elCardTargetPrice.textContent = formatCurrency(recommendedNet);
-      if (elCardTargetGross) elCardTargetGross.textContent = formatCurrency(recommendedGross);
-      if (elCardTotalFC) elCardTotalFC.textContent = formatCurrency(totalFoodCost);
-      if (elCardActualFC) elCardActualFC.textContent = actualFcPct.toFixed(1) + "%";
-      if (elCardFCDiff) elCardFCDiff.textContent = "Target Benchmark: " + recipe.targetFc + "%";
-      if (elCardGrossMargin) elCardGrossMargin.textContent = formatCurrency(grossMargin);
-      if (elCardMarginPercent) elCardMarginPercent.textContent = "Net Profit Margin: " + marginPct.toFixed(1) + "%";
-      if (elNetSalesDisplay) elNetSalesDisplay.textContent = "Net Sales: " + formatCurrency(actualNet);
-
-      const badge = document.getElementById('fcBadge');
-      if (badge) {
+      if (domCache.fcBadge) {
         if (recipe.targetFc > 0 && actualFcPct > 0) {
           if (actualFcPct <= recipe.targetFc) {
-            badge.textContent = "On Target";
-            badge.className = "px-2.5 py-0.5 text-[10px] font-black rounded-full bg-emerald-100 text-emerald-800 border border-emerald-200/80";
+            domCache.fcBadge.textContent = "On Target";
+            domCache.fcBadge.className = "px-2.5 py-0.5 text-[10px] font-black rounded-full bg-emerald-100 text-emerald-800 border border-emerald-200/80";
           } else {
-            badge.textContent = "High Cost";
-            badge.className = "px-2.5 py-0.5 text-[10px] font-black rounded-full bg-rose-100 text-rose-800 border border-rose-200/80";
+            domCache.fcBadge.textContent = "High Cost";
+            domCache.fcBadge.className = "px-2.5 py-0.5 text-[10px] font-black rounded-full bg-rose-100 text-rose-800 border border-rose-200/80";
           }
         } else {
-          badge.textContent = "N/A";
-          badge.className = "px-2 py-0.5 text-[10px] font-bold rounded-full bg-slate-100 text-slate-600 border border-slate-200";
+          domCache.fcBadge.textContent = "N/A";
+          domCache.fcBadge.className = "px-2 py-0.5 text-[10px] font-bold rounded-full bg-slate-100 text-slate-600 border border-slate-200";
         }
       }
 
@@ -1521,6 +1559,7 @@ function doPost(e) {
           responsive: true,
           maintainAspectRatio: false,
           cutout: '68%',
+          animation: false, // Performance optimization
           plugins: {
             legend: { 
               position: 'bottom', 
@@ -1561,7 +1600,7 @@ function doPost(e) {
           '#ec4899', '#f59e0b', '#64748b', '#06b6d4'
         ];
       }
-      chartInstance.update();
+      chartInstance.update('none'); // Update without canvas re-animation delay
     }
 
     function openNewRecipeModal() {
@@ -1585,6 +1624,7 @@ function doPost(e) {
         id: newId,
         name: name,
         description: desc,
+        currency: currentCurrency,
         qFactor: 10,
         targetFc: 0,
         servicePercent: 10,
@@ -1595,7 +1635,7 @@ function doPost(e) {
       });
 
       activeRecipeId = newId;
-      saveLocalStorageData();
+      saveLocalStorageDataImmediate();
       populateRecipeDropdown();
       renderActiveRecipe();
       closeNewRecipeModal();
@@ -1612,7 +1652,7 @@ function doPost(e) {
       });
 
       activeRecipeId = newId;
-      saveLocalStorageData();
+      saveLocalStorageDataImmediate();
       populateRecipeDropdown();
       renderActiveRecipe();
     }
@@ -1630,7 +1670,7 @@ function doPost(e) {
         () => {
           recipes = recipes.filter(r => r.id !== activeRecipeId);
           activeRecipeId = recipes[0].id;
-          saveLocalStorageData();
+          saveLocalStorageDataImmediate();
           populateRecipeDropdown();
           renderActiveRecipe();
         }
@@ -1650,7 +1690,6 @@ function doPost(e) {
       const tbody = document.getElementById('masterTableBody');
       const searchVal = (document.getElementById('masterSearchInput')?.value || '').toLowerCase().trim();
       if (!tbody) return;
-      tbody.innerHTML = '';
 
       let keys = Object.keys(masterLibrary);
       if (searchVal) {
@@ -1662,6 +1701,7 @@ function doPost(e) {
         return;
       }
 
+      const fragment = document.createDocumentFragment();
       keys.forEach(k => {
         const item = masterLibrary[k];
         const tr = document.createElement('tr');
@@ -1673,8 +1713,11 @@ function doPost(e) {
             <button onclick="deleteMasterItem('${k}')" class="text-rose-600 hover:text-rose-800 font-bold text-xs">Delete</button>
           </td>
         `;
-        tbody.appendChild(tr);
+        fragment.appendChild(tr);
       });
+
+      tbody.innerHTML = '';
+      tbody.appendChild(fragment);
     }
 
     function addMasterItem() {
@@ -1684,7 +1727,7 @@ function doPost(e) {
 
       if (!name) return;
       masterLibrary[name] = { unit, unitPrice };
-      saveLocalStorageData();
+      saveLocalStorageDataImmediate();
       updateMasterDatalist();
       renderMasterLibrary();
 
@@ -1694,7 +1737,7 @@ function doPost(e) {
 
     function deleteMasterItem(name) {
       delete masterLibrary[name];
-      saveLocalStorageData();
+      saveLocalStorageDataImmediate();
       updateMasterDatalist();
       renderMasterLibrary();
     }
@@ -1749,7 +1792,7 @@ function doPost(e) {
 
       const tbody = document.getElementById('pastePreviewBody');
       if (tbody) {
-        tbody.innerHTML = '';
+        const fragment = document.createDocumentFragment();
         parsedExcelData.forEach(item => {
           const tr = document.createElement('tr');
           tr.innerHTML = `
@@ -1759,8 +1802,10 @@ function doPost(e) {
             <td class="p-2 font-mono">${formatCurrency(item.unitPrice)}</td>
             <td class="p-2 font-mono font-bold text-right">${formatCurrency(item.qty * item.unitPrice)}</td>
           `;
-          tbody.appendChild(tr);
+          fragment.appendChild(tr);
         });
+        tbody.innerHTML = '';
+        tbody.appendChild(fragment);
       }
 
       document.getElementById('pastePreviewContainer')?.classList.remove('hidden');
@@ -1782,7 +1827,7 @@ function doPost(e) {
         recipe.ingredients.push(...parsedExcelData);
       }
 
-      saveLocalStorageData();
+      saveLocalStorageDataImmediate();
       renderIngredientsTable();
       updateCalculations();
       closePasteExcelModal();
@@ -1790,7 +1835,7 @@ function doPost(e) {
 
     async function saveAndSyncActiveRecipe() {
       const recipe = getActiveRecipe();
-      saveLocalStorageData();
+      saveLocalStorageDataImmediate();
 
       if (recipe.ingredients && recipe.ingredients.length > 0) {
         recipe.ingredients.forEach(ing => {
@@ -1802,7 +1847,7 @@ function doPost(e) {
             };
           }
         });
-        saveLocalStorageData();
+        saveLocalStorageDataImmediate();
         updateMasterDatalist();
       }
 
@@ -1862,7 +1907,7 @@ function doPost(e) {
     function saveGoogleSheetsConfig() {
       const input = document.getElementById('googleWebhookUrlInput')?.value.trim();
       googleWebhookUrl = input || "";
-      saveLocalStorageData();
+      saveLocalStorageDataImmediate();
       updateSheetsBadge();
       
       if (googleWebhookUrl) {
@@ -1917,12 +1962,12 @@ function doPost(e) {
         name: recipe.name,
         description: recipe.description,
         currency: currentCurrency,
-        qFactor: recipe.qFactor,
-        targetFc: recipe.targetFc,
-        servicePercent: recipe.servicePercent,
-        taxPercent: recipe.taxPercent,
-        projectedPrice: recipe.projectedPrice,
-        priceMode: recipe.priceMode,
+        qFactor: parseNumeric(recipe.qFactor),
+        targetFc: parseNumeric(recipe.targetFc),
+        servicePercent: parseNumeric(recipe.servicePercent),
+        taxPercent: parseNumeric(recipe.taxPercent),
+        projectedPrice: parseNumeric(recipe.projectedPrice),
+        priceMode: recipe.priceMode || 'gross',
         subtotal: subtotal,
         qFactorCost: qFactorCost,
         totalFoodCost: totalFoodCost,
@@ -2019,6 +2064,15 @@ function doPost(e) {
           if (data.recipes && data.recipes.length > 0) {
             data.recipes.forEach(remoteRec => {
               if (!remoteRec.name) return;
+
+              remoteRec.qFactor = remoteRec.qFactor !== undefined ? parsePercentage(remoteRec.qFactor) : 10;
+              remoteRec.targetFc = remoteRec.targetFc !== undefined ? parsePercentage(remoteRec.targetFc) : 0;
+              remoteRec.servicePercent = remoteRec.servicePercent !== undefined ? parsePercentage(remoteRec.servicePercent) : 10;
+              remoteRec.taxPercent = remoteRec.taxPercent !== undefined ? parsePercentage(remoteRec.taxPercent) : 11;
+              remoteRec.projectedPrice = remoteRec.projectedPrice !== undefined ? parseNumeric(remoteRec.projectedPrice) : 0;
+              remoteRec.priceMode = remoteRec.priceMode || 'gross';
+              remoteRec.currency = remoteRec.currency || currentCurrency;
+
               const existingIdx = recipes.findIndex(r => r.id === remoteRec.id || r.name.toLowerCase() === remoteRec.name.toLowerCase());
               if (existingIdx >= 0) {
                 recipes[existingIdx] = { ...recipes[existingIdx], ...remoteRec };
@@ -2033,7 +2087,7 @@ function doPost(e) {
             }
           }
 
-          saveLocalStorageData();
+          saveLocalStorageDataImmediate();
           populateRecipeDropdown();
           renderActiveRecipe();
 
@@ -2055,6 +2109,62 @@ function doPost(e) {
         if (!silent) showToast("Pull Error", "Could not fetch data. Verify Webhook URL & deployment access is set to 'Anyone'.", "error", 4000);
         return false;
       }
+    }
+
+    function showToast(title, message, type = 'info', duration = 3500) {
+      const container = document.getElementById('toastContainer');
+      if (!container) return;
+
+      const toast = document.createElement('div');
+      
+      let bgColors = "bg-slate-900/95 border-slate-700 text-white shadow-2xl backdrop-blur-md";
+      let iconName = "info";
+      let iconColor = "text-blue-400";
+
+      if (type === 'success') {
+        bgColors = "bg-slate-900/95 border-emerald-500/50 text-white shadow-2xl backdrop-blur-md";
+        iconName = "check-circle-2";
+        iconColor = "text-emerald-400";
+      } else if (type === 'error') {
+        bgColors = "bg-slate-900/95 border-rose-500/50 text-white shadow-2xl backdrop-blur-md";
+        iconName = "alert-circle";
+        iconColor = "text-rose-400";
+      } else if (type === 'info') {
+        bgColors = "bg-slate-900/95 border-blue-500/50 text-white shadow-2xl backdrop-blur-md";
+        iconName = "info";
+        iconColor = "text-blue-400";
+      }
+
+      toast.className = `pointer-events-auto p-3.5 rounded-2xl border flex items-start space-x-3 transform transition-all duration-300 ease-out translate-y-2 opacity-0 ${bgColors}`;
+
+      toast.innerHTML = `
+        <div class="p-1 rounded-lg shrink-0 mt-0.5 ${iconColor}">
+          <i data-lucide="${iconName}" class="w-4 h-4"></i>
+        </div>
+        <div class="flex-1 min-w-0 pr-1">
+          <h4 class="text-xs font-bold leading-tight">${title}</h4>
+          <p class="text-[11px] text-slate-300 mt-0.5 leading-snug">${message}</p>
+        </div>
+        <button onclick="this.parentElement.remove()" class="text-slate-400 hover:text-slate-200 p-0.5 shrink-0">
+          <i data-lucide="x" class="w-3.5 h-3.5"></i>
+        </button>
+      `;
+
+      container.appendChild(toast);
+      if (window.lucide) lucide.createIcons();
+
+      requestAnimationFrame(() => {
+        toast.classList.remove('translate-y-2', 'opacity-0');
+        toast.classList.add('translate-y-0', 'opacity-100');
+      });
+
+      setTimeout(() => {
+        toast.classList.remove('translate-y-0', 'opacity-100');
+        toast.classList.add('translate-y-2', 'opacity-0');
+        setTimeout(() => {
+          toast.remove();
+        }, 300);
+      }, duration);
     }
 
     function showConfirmModal(title, msg, onConfirm, okOnly = false) {
@@ -2192,7 +2302,7 @@ function doPost(e) {
             if (imported.masterLibrary) masterLibrary = imported.masterLibrary;
             activeRecipeId = recipes[0].id;
 
-            saveLocalStorageData();
+            saveLocalStorageDataImmediate();
             updateMasterDatalist();
             populateRecipeDropdown();
             renderActiveRecipe();
