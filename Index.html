@@ -1106,14 +1106,17 @@ function doPost(e) {
       try {
         const savedRecipes = localStorage.getItem('chefcost_recipes_v2');
         const savedMaster = localStorage.getItem('chefcost_master_v2');
+        const savedActive = localStorage.getItem('chefcost_active_id_v2');
         const savedWebhook = localStorage.getItem('chefcost_webhook_url_v2');
 
         if (savedRecipes) recipes = JSON.parse(savedRecipes);
         if (savedMaster) masterLibrary = JSON.parse(savedMaster);
         if (savedWebhook) googleWebhookUrl = savedWebhook;
 
-        // Always default to the first recipe set on startup
-        if (recipes && recipes.length > 0) {
+        // Preserve last active recipe if valid, otherwise fallback to first recipe
+        if (savedActive && recipes.some(r => r.id === savedActive)) {
+          activeRecipeId = savedActive;
+        } else if (recipes && recipes.length > 0) {
           activeRecipeId = recipes[0].id;
         }
       } catch(e) {
@@ -1986,10 +1989,25 @@ function doPost(e) {
               importedCount++;
             });
 
-            // Always display the first (default) recipe after pulling data
-            if (recipes && recipes.length > 0) {
-              activeRecipeId = recipes[0].id;
-            }
+            // Clean up any unedited temporary blank recipes to keep list tidy
+            recipes = recipes.filter(r => (r.ingredients && r.ingredients.length > 0) || (r.name && r.name !== "New Blank Recipe" && r.name !== "My First Recipe"));
+
+            // Create a fresh blank recipe card as default active view to encourage new data entry
+            const newBlankId = "rec_blank_" + Date.now();
+            recipes.unshift({
+              id: newBlankId,
+              name: "New Blank Recipe",
+              description: "Enter new dish ingredients and pricing...",
+              currency: currentCurrency,
+              qFactor: 10,
+              targetFc: 0,
+              servicePercent: 10,
+              taxPercent: 11,
+              priceMode: "gross",
+              projectedPrice: 0,
+              ingredients: []
+            });
+            activeRecipeId = newBlankId;
           }
 
           saveLocalStorageDataImmediate();
@@ -1999,7 +2017,7 @@ function doPost(e) {
           if (!silent) {
             showToast(
               "Pull Successful!",
-              `Loaded ${importedCount} recipe(s) & Master Library items from Google Sheets.`,
+              `Loaded ${importedCount} recipe(s) & Master Library items. Displaying new blank recipe by default.`,
               "success",
               3500
             );
