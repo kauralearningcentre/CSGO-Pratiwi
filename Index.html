@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>COGS Pratiwi Restaurant - Kaura Bali</title>
 
+  <!-- Tailwind CSS -->
   <script src="https://cdn.tailwindcss.com"></script>
   <script>
     tailwind.config = {
@@ -39,8 +40,13 @@
     }
   </script>
 
+  <!-- Lucide Icons -->
   <script src="https://unpkg.com/lucide@latest"></script>
+
+  <!-- Chart.js -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <!-- SheetJS (xlsx) -->
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 
   <style>
@@ -124,6 +130,7 @@
 </head>
 <body class="min-h-screen text-slate-800 flex flex-col antialiased bg-slate-50/60 selection:bg-emerald-100 selection:text-emerald-900 overflow-y-auto">
 
+  <!-- Toast Notification Container -->
   <div id="toastContainer" class="fixed bottom-4 right-4 left-4 sm:left-auto z-50 flex flex-col gap-2.5 max-w-sm w-full pointer-events-none no-print"></div>
 
   <!-- Master Library Autocomplete Datalist -->
@@ -309,6 +316,7 @@
       </div>
     </div>
 
+    <!-- Financial Scorecards (Reordered 5 Scorecards: Actual Selling Price, Food Cost, Margin, Target Price, Actual FC %) -->
     <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2.5 sm:gap-4">
       
       <!-- 1. Actual Selling Price Card -->
@@ -561,6 +569,7 @@
 
   </main>
 
+  <!-- Global Custom Confirmation Modal -->
   <div id="confirmModal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-xs z-50 hidden flex items-center justify-center p-4 no-print animate-in fade-in duration-150">
     <div class="bg-white border border-slate-200 rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-4">
       <h3 id="confirmTitle" class="font-bold text-slate-900 text-base">Confirmation</h3>
@@ -576,6 +585,7 @@
     </div>
   </div>
 
+  <!-- Create New Recipe Modal -->
   <div id="newRecipeModal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-xs z-50 hidden flex items-center justify-center p-4 no-print animate-in fade-in duration-150">
     <div class="bg-white border border-slate-200 rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-4">
       <div class="flex justify-between items-center border-b border-slate-100 pb-3">
@@ -604,6 +614,7 @@
     </div>
   </div>
 
+  <!-- Master Ingredient Price Library Modal -->
   <div id="masterModal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-xs z-50 hidden flex items-center justify-center p-4 no-print animate-in fade-in duration-150">
     <div class="bg-white border border-slate-200 rounded-2xl max-w-2xl w-full max-h-[85vh] flex flex-col shadow-2xl overflow-hidden">
       
@@ -618,6 +629,8 @@
       </div>
 
       <div class="p-4 space-y-4 overflow-y-auto flex-1">
+        
+        <!-- Search Input -->
         <div class="flex items-center space-x-2">
           <div class="relative flex-1">
             <i data-lucide="search" class="w-4 h-4 text-slate-400 absolute left-3 top-2.5"></i>
@@ -625,6 +638,7 @@
           </div>
         </div>
 
+        <!-- Quick Add Box -->
         <div class="bg-slate-50/80 p-3 rounded-xl border border-slate-200/80 flex flex-wrap gap-2 items-center">
           <input type="text" id="masterNameInput" placeholder="Ingredient Name (e.g. Butter)" class="flex-1 min-w-[140px] bg-white border border-slate-200 rounded-xl px-3 py-1.5 text-xs focus:outline-none focus:border-emerald-500">
           <select id="masterUnitInput" class="bg-white border border-slate-200 rounded-xl px-2 py-1.5 text-xs font-semibold focus:outline-none">
@@ -666,6 +680,7 @@
     </div>
   </div>
 
+  <!-- Excel Copy Paste Modal -->
   <div id="pasteExcelModal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-xs z-50 hidden flex items-center justify-center p-4 no-print animate-in fade-in duration-150">
     <div class="bg-white border border-slate-200 rounded-2xl max-w-2xl w-full max-h-[85vh] flex flex-col shadow-2xl overflow-hidden">
       
@@ -724,6 +739,7 @@
     </div>
   </div>
 
+  <!-- Google Sheets Integration Modal -->
   <div id="googleSheetsModal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-xs z-50 hidden flex items-center justify-center p-4 no-print animate-in fade-in duration-150">
     <div class="bg-white border border-slate-200 rounded-2xl max-w-2xl w-full max-h-[85vh] flex flex-col shadow-2xl overflow-hidden">
       
@@ -739,6 +755,7 @@
 
       <div class="p-5 space-y-4 overflow-y-auto flex-1 text-xs text-slate-700">
         
+        <!-- Webhook URL Configuration -->
         <div class="space-y-2 bg-slate-50 p-4 rounded-xl border border-slate-200">
           <label class="block font-bold text-slate-900 text-xs">Google Apps Script Web App URL:</label>
           <div class="flex items-center space-x-2">
@@ -750,6 +767,7 @@
           <p class="text-[11px] text-slate-500">Paste your deployed Apps Script URL here. Every synced recipe will create or update a sheet tab!</p>
         </div>
 
+        <!-- Manual Sync Buttons -->
         <div class="flex flex-wrap items-center justify-between gap-3 p-3 bg-emerald-50/60 border border-emerald-200/80 rounded-xl">
           <div class="space-y-0.5">
             <span class="font-bold text-emerald-950">Bi-Directional Sync Controls</span>
@@ -771,6 +789,7 @@
           </div>
         </div>
 
+        <!-- Google Sheets Apps Script Instructions -->
         <div class="space-y-3 pt-2">
           <h4 class="font-bold text-slate-900 border-b border-slate-100 pb-2 text-xs uppercase tracking-wider flex items-center justify-between">
             <span>Setup Instructions (1-Minute Setup)</span>
@@ -807,6 +826,7 @@ function doGet(e) {
     var masterLibrary = {};
     var recipes = [];
     
+    // 1. Read Master Price Library
     var masterSheet = ss.getSheetByName("Master_Price_Library");
     if (masterSheet) {
       var masterData = masterSheet.getDataRange().getValues();
@@ -821,6 +841,7 @@ function doGet(e) {
       }
     }
     
+    // 2. Read Recipe Sheets (Fast JSON metadata check)
     for (var s = 0; s < sheets.length; s++) {
       var sheet = sheets[s];
       if (sheet.getName() === "Master_Price_Library") continue;
@@ -855,6 +876,7 @@ function doPost(e) {
     var data = JSON.parse(e.postData.contents);
     var ss = SpreadsheetApp.getActiveSpreadsheet();
     
+    // --- 1. Master Price Library Sync ---
     var masterSheetName = "Master_Price_Library";
     var masterSheet = ss.getSheetByName(masterSheetName);
     if (!masterSheet) {
@@ -894,6 +916,7 @@ function doPost(e) {
       });
     }
 
+    // --- 2. Individual Recipe Sheet Sync ---
     var sheetName = (data.name || "Untitled Recipe").replace(/[:\\/?*\[\]]/g, "_").substring(0, 30);
     var sheet = ss.getSheetByName(sheetName);
     if (!sheet) {
@@ -902,15 +925,19 @@ function doPost(e) {
       sheet.clear();
     }
     
+    // Store structured JSON payload in cell Z1 for instant recovery
     sheet.getRange("Z1").setValue(JSON.stringify(data));
     
+    // Title & Info
     sheet.getRange(1, 1).setValue("Recipe: " + data.name).setFontWeight("bold").setFontSize(14);
     sheet.getRange(2, 1).setValue("Description: " + (data.description || ""));
     sheet.getRange(3, 1).setValue("Currency: " + (data.currency || "IDR"));
     
+    // Ingredients Header
     var headers = [["#", "Ingredient Name", "Quantity", "Unit", "Unit Price", "Total Cost"]];
     sheet.getRange(5, 1, 1, 6).setValues(headers).setFontWeight("bold").setBackground("#d1fae5");
     
+    // Ingredients Rows
     var rows = [];
     if (data.ingredients && data.ingredients.length > 0) {
       data.ingredients.forEach(function(ing, index) {
@@ -919,6 +946,7 @@ function doPost(e) {
       sheet.getRange(6, 1, rows.length, 6).setValues(rows);
     }
     
+    // Summary Metrics
     var startRow = 6 + (rows.length || 1) + 1;
     var summary = [
       ["Subtotal Ingredients Cost:", "", "", "", "", data.subtotal],
@@ -1463,6 +1491,7 @@ function doPost(e) {
       if (domCache.cardGrossMargin) domCache.cardGrossMargin.textContent = formatCurrency(grossMargin);
       if (domCache.cardMarginPercent) domCache.cardMarginPercent.textContent = "Net Profit Margin: " + marginPct.toFixed(1) + "%";
       
+      // Update Dual Display: Actual Net & Actual Gross Price
       if (domCache.calcNetPriceDisplay) domCache.calcNetPriceDisplay.textContent = formatCurrency(actualNet);
       if (domCache.calcGrossPriceDisplay) domCache.calcGrossPriceDisplay.textContent = formatCurrency(actualGross);
 
@@ -1801,10 +1830,10 @@ function doPost(e) {
       updateSheetsBadge();
       
       if (googleWebhookUrl) {
-        showToast("URL Saved & Syncing", "Google Sheets URL saved. Pulling recipes automatically...", "info", 3500);
+        showToast("URL Saved & Syncing", "Google Sheets URL saved. Pulling recipes and library automatically...", "info", 3500);
         pullFromGoogleSheets(false);
       } else {
-        showToast("URL Cleared", "Google Sheets Webhook URL has been cleared.", "info", 3000);
+        showConfirmModal("URL Cleared", "Google Sheets Webhook URL has been cleared.", null, true);
       }
     }
 
@@ -1826,7 +1855,7 @@ function doPost(e) {
       if (!codeArea) return;
       codeArea.select();
       document.execCommand('copy');
-      showToast("Copied!", "Google Apps Script code copied to clipboard.", "success", 2500);
+      showConfirmModal("Copied!", "Google Apps Script code copied to clipboard.", null, true);
     }
 
     function prepareRecipePayload(recipe) {
@@ -1916,9 +1945,9 @@ function doPost(e) {
 
       if (showAlert) {
         if (success) {
-          showToast("Synced to Google Sheets", `Recipe "${activeRec.name}" sent to Google Sheets!`, "success", 3000);
+          showConfirmModal("Synced to Google Sheets", `Recipe "${activeRec.name}" was sent to Google Sheets! Check your spreadsheet tab.`, null, true);
         } else {
-          showToast("Sync Error", "Could not send data to Google Sheets. Check your Webhook URL.", "error", 4000);
+          showConfirmModal("Sync Error", "Could not send data to Google Sheets. Please check your Webhook URL.", null, true);
         }
       }
       return success;
@@ -1937,7 +1966,7 @@ function doPost(e) {
         count++;
       }
 
-      showToast("Batch Sync Complete", `Successfully synced ${count} recipe(s) to your Google Sheet!`, "success", 3500);
+      showConfirmModal("Batch Sync Complete", `Successfully synced ${count} recipe(s) to your Google Sheet!`, null, true);
     }
 
     async function pullFromGoogleSheets(silent = false) {
@@ -2005,6 +2034,8 @@ function doPost(e) {
               importedCount++;
             });
 
+            recipes = recipes.filter(r => (r.ingredients && r.ingredients.length > 0) || (r.name && r.name !== "New Blank Recipe" && r.name !== "My First Recipe"));
+
             const newBlankId = "rec_blank_" + Date.now();
             recipes.unshift({
               id: newBlankId,
@@ -2029,7 +2060,7 @@ function doPost(e) {
           if (!silent) {
             showToast(
               "Pull Successful!",
-              `Loaded ${importedCount} recipe(s) & Master Library. Displaying new blank recipe by default.`,
+              `Loaded ${importedCount} recipe(s) & Master Library items. Displaying new blank recipe by default.`,
               "success",
               3500
             );
@@ -2082,16 +2113,15 @@ function doPost(e) {
 
       showToast(
         "Syncing in Background...", 
-        `Saving "${recipe.name}" & updating Google Sheets...`, 
+        `Saving "${recipe.name}" & updating Google Sheets in background.`, 
         "info", 
         2500
       );
 
       syncCurrentRecipeToGoogleSheets(false).then(pushSuccess => {
         if (pushSuccess) {
-          pullFromGoogleSheets(true).then(() => {
-            showToast("Sync Complete", `"${recipe.name}" pushed and library refreshed successfully!`, "success", 3000);
-          });
+          showToast("Saved to Sheets", `"${recipe.name}" pushed successfully!`, "success", 3000);
+          pullFromGoogleSheets(true);
         } else {
           showToast("Sync Error", "Failed to reach Google Sheets. Check your Webhook URL.", "error", 4000);
         }
