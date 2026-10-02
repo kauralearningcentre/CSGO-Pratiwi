@@ -5,7 +5,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>COGS Pratiwi Restaurant - Kaura Bali</title>
 
-  <!-- Tailwind CSS -->
   <script src="https://cdn.tailwindcss.com"></script>
   <script>
     tailwind.config = {
@@ -40,13 +39,8 @@
     }
   </script>
 
-  <!-- Lucide Icons -->
   <script src="https://unpkg.com/lucide@latest"></script>
-
-  <!-- Chart.js -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-
-  <!-- SheetJS (xlsx) -->
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 
   <style>
@@ -130,7 +124,6 @@
 </head>
 <body class="min-h-screen text-slate-800 flex flex-col antialiased bg-slate-50/60 selection:bg-emerald-100 selection:text-emerald-900 overflow-y-auto">
 
-  <!-- Toast Notification Container -->
   <div id="toastContainer" class="fixed bottom-4 right-4 left-4 sm:left-auto z-50 flex flex-col gap-2.5 max-w-sm w-full pointer-events-none no-print"></div>
 
   <!-- Master Library Autocomplete Datalist -->
@@ -148,7 +141,7 @@
           <div>
             <div class="flex items-center space-x-1.5">
               <h1 class="text-sm sm:text-lg font-extrabold text-slate-900 tracking-tight leading-none">COGS Pratiwi Restaurant</h1>
-              <span class="px-1.5 py-0.5 text-[9px] sm:text-[10px] font-bold bg-emerald-100 text-emerald-800 rounded border border-emerald-200">v2.1</span>
+              <span class="px-1.5 py-0.5 text-[9px] sm:text-[10px] font-bold bg-emerald-100 text-emerald-800 rounded border border-emerald-200">v2.4</span>
             </div>
             <p class="text-[10px] sm:text-[11px] text-slate-500 font-medium mt-0.5">Kaura Bali - Food Costing Studio</p>
           </div>
@@ -165,7 +158,6 @@
         </div>
       </div>
 
-      <!-- Header Tools & Actions -->
       <div class="flex items-center justify-start sm:justify-end space-x-1.5 sm:space-x-2.5 w-full sm:w-auto overflow-x-auto pb-1 sm:pb-0 scrollbar-none">
         
         <!-- Currency Selector (Desktop) -->
@@ -198,45 +190,13 @@
           <span class="hidden md:inline">Reset</span>
         </button>
 
-        <!-- Export Menu Dropdown -->
+        <!-- Export Pop-Up Button -->
         <div class="relative inline-block text-left shrink-0">
-          <button id="exportDropdownBtn" onclick="toggleExportMenu()" class="px-2.5 sm:px-3 py-1.5 bg-slate-800 hover:bg-slate-900 text-white text-[11px] sm:text-xs font-bold rounded-xl transition-all flex items-center space-x-1 shadow-xs active:scale-95">
+          <button id="exportDropdownBtn" onclick="openExportModal()" class="px-2.5 sm:px-3 py-1.5 bg-slate-800 hover:bg-slate-900 text-white text-[11px] sm:text-xs font-bold rounded-xl transition-all flex items-center space-x-1 shadow-xs active:scale-95">
             <i data-lucide="download" class="w-3.5 h-3.5 sm:w-4 sm:h-4"></i>
             <span>Export</span>
             <i data-lucide="chevron-down" class="w-3 h-3 ml-0.5"></i>
           </button>
-          
-          <div id="exportMenu" class="hidden absolute right-0 mt-2 w-56 bg-white border border-slate-200/90 rounded-2xl shadow-xl z-50 py-1.5 no-print divide-y divide-slate-100 animate-in fade-in slide-in-from-top-2 duration-150">
-            <div class="py-1">
-              <button onclick="syncCurrentRecipeToGoogleSheets()" class="w-full text-left px-4 py-2 text-xs font-medium text-slate-700 hover:bg-emerald-50 hover:text-emerald-700 flex items-center space-x-2.5 transition-colors">
-                <i data-lucide="send" class="w-4 h-4 text-emerald-600"></i>
-                <span>Push Active to Sheets</span>
-              </button>
-              <button onclick="pullFromGoogleSheets()" class="w-full text-left px-4 py-2 text-xs font-medium text-slate-700 hover:bg-emerald-50 hover:text-emerald-700 flex items-center space-x-2.5 transition-colors">
-                <i data-lucide="cloud-download" class="w-4 h-4 text-emerald-600"></i>
-                <span>Pull / Load from Sheets</span>
-              </button>
-              <button onclick="exportToPDF()" class="w-full text-left px-4 py-2 text-xs font-medium text-slate-700 hover:bg-emerald-50 hover:text-emerald-700 flex items-center space-x-2.5 transition-colors">
-                <i data-lucide="printer" class="w-4 h-4 text-emerald-600"></i>
-                <span>Print / Save as PDF</span>
-              </button>
-              <button onclick="exportToExcel()" class="w-full text-left px-4 py-2 text-xs font-medium text-slate-700 hover:bg-emerald-50 hover:text-emerald-700 flex items-center space-x-2.5 transition-colors">
-                <i data-lucide="file-spreadsheet" class="w-4 h-4 text-emerald-600"></i>
-                <span>Export Excel (.xlsx)</span>
-              </button>
-            </div>
-            <div class="py-1">
-              <button onclick="exportToJSON()" class="w-full text-left px-4 py-2 text-xs font-medium text-slate-700 hover:bg-emerald-50 hover:text-emerald-700 flex items-center space-x-2.5 transition-colors">
-                <i data-lucide="file-json" class="w-4 h-4 text-emerald-600"></i>
-                <span>Backup JSON Data</span>
-              </button>
-              <label class="w-full text-left px-4 py-2 text-xs font-medium text-slate-700 hover:bg-emerald-50 hover:text-emerald-700 flex items-center space-x-2.5 transition-colors cursor-pointer">
-                <i data-lucide="upload-cloud" class="w-4 h-4 text-emerald-600"></i>
-                <span>Restore JSON Backup</span>
-                <input type="file" id="importJsonInput" onchange="importFromJSON(event)" class="hidden" accept=".json">
-              </label>
-            </div>
-          </div>
         </div>
 
       </div>
@@ -245,7 +205,6 @@
 
   <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
 
-    <!-- Formatting Tip Banner -->
     <div class="bg-gradient-to-r from-emerald-50 via-teal-50 to-emerald-50/50 border border-emerald-200/80 rounded-2xl p-4 flex items-center justify-between shadow-xs no-print gap-3">
       <div class="flex items-start space-x-3">
         <div class="p-2 bg-emerald-600 text-white rounded-xl shrink-0 mt-0.5 shadow-sm">
@@ -253,10 +212,10 @@
         </div>
         <div class="text-xs text-slate-700 space-y-0.5">
           <p class="font-bold text-emerald-950 flex items-center space-x-1.5">
-            <span>Pro Tip: Ingredient Autocomplete & Formatting</span>
+            <span>Pro Tip: Category Filter & Ingredient Autocomplete</span>
           </p>
           <p class="text-slate-600">
-            Type an ingredient name to auto-fill prices from your <strong class="text-emerald-900">Master Price Library</strong>! Use dot (<span class="font-mono font-bold text-slate-900 bg-white/80 px-1.5 py-0.5 rounded border border-emerald-200">.</span>) or comma (<span class="font-mono font-bold text-slate-900 bg-white/80 px-1.5 py-0.5 rounded border border-emerald-200">,</span>) for decimal quantities.
+            Use the category filter (<strong class="text-emerald-900">All Categories, Vegan, Main Course, etc.</strong>) to easily view and organize your menu items!
           </p>
         </div>
       </div>
@@ -265,18 +224,40 @@
       </button>
     </div>
 
-    <!-- Recipe Header & Selector Card -->
     <div class="bg-white border border-slate-200/90 rounded-2xl p-5 shadow-sm print-card">
       <div class="flex flex-col md:flex-row md:items-center justify-between gap-5">
         
-        <!-- Editable Recipe Name & Description -->
-        <div class="flex-1 space-y-1.5">
-          <div class="flex items-center space-x-2">
+        <!-- Editable Recipe Name, Category Filter Badge & Description -->
+        <div class="flex-1 space-y-2">
+          <div class="flex flex-wrap items-center gap-2">
             <span class="inline-flex items-center space-x-1 px-2.5 py-0.5 text-[10px] font-extrabold uppercase tracking-wider bg-emerald-100/80 text-emerald-800 border border-emerald-200/80 rounded-full no-print">
               <span class="w-1.5 h-1.5 rounded-full bg-emerald-600 animate-pulse"></span>
               <span>Active Recipe Card</span>
             </span>
-            <span class="text-xs text-slate-400 font-medium">Standard Yield Costing Sheet</span>
+            
+            <!-- Category Filter Selector -->
+            <div class="inline-flex items-center space-x-1.5 bg-slate-100/90 border border-slate-200/90 hover:border-emerald-300 rounded-lg px-2 py-0.5 transition-colors no-print">
+              <i data-lucide="filter" class="w-3 h-3 text-emerald-600 shrink-0"></i>
+              <select id="categoryFilterSelect" onchange="filterRecipesByCategory(this.value)" class="bg-transparent text-[11px] font-extrabold text-slate-700 focus:outline-none cursor-pointer pr-1">
+                <option value="ALL">All Categories (Filter)</option>
+                <option value="Main Course">Main Course</option>
+                <option value="Appetizer">Appetizer</option>
+                <option value="Soup & Salad">Soup & Salad</option>
+                <option value="Dessert">Dessert</option>
+                <option value="Beverage">Beverage</option>
+                <option value="Side Dish">Side Dish</option>
+                <option value="Bakery & Pastry">Bakery & Pastry</option>
+                <option value="Chef Special">Chef Special</option>
+                <option value="Sub-Recipe / Sauce">Sub-Recipe / Sauce</option>
+                <option value="Vegan">Vegan</option>
+                <option value="Vegetarian">Vegetarian</option>
+                <option value="Plant-Based / Dairy-Free">Plant-Based / Dairy-Free</option>
+                <option value="Gluten-Free Special">Gluten-Free Special</option>
+                <option value="Breakfast & Brunch">Breakfast & Brunch</option>
+              </select>
+            </div>
+
+            <span class="text-xs text-slate-400 font-medium hidden sm:inline">• Standard Costing Sheet</span>
           </div>
           
           <div class="space-y-1">
@@ -291,8 +272,29 @@
           </div>
         </div>
 
-        <!-- Recipe Selector Toolbar -->
         <div class="flex flex-wrap items-center gap-2 no-print shrink-0 bg-slate-50 p-2 rounded-2xl border border-slate-200/70">
+          
+          <!-- Food Category Assign Selector -->
+          <div class="relative min-w-[150px]">
+            <select id="recipeCategorySelect" onchange="updateRecipeCategory(this.value)" class="w-full bg-white border border-slate-200 text-slate-700 font-bold text-xs rounded-xl px-2.5 py-2 focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 shadow-xs cursor-pointer">
+              <option value="Main Course">Category: Main Course</option>
+              <option value="Appetizer">Category: Appetizer</option>
+              <option value="Soup & Salad">Category: Soup & Salad</option>
+              <option value="Dessert">Category: Dessert</option>
+              <option value="Beverage">Category: Beverage</option>
+              <option value="Side Dish">Category: Side Dish</option>
+              <option value="Bakery & Pastry">Category: Bakery & Pastry</option>
+              <option value="Chef Special">Category: Chef Special</option>
+              <option value="Sub-Recipe / Sauce">Category: Sub-Recipe / Sauce</option>
+              <option value="Vegan">Category: Vegan</option>
+              <option value="Vegetarian">Category: Vegetarian</option>
+              <option value="Plant-Based / Dairy-Free">Category: Plant-Based / Dairy-Free</option>
+              <option value="Gluten-Free Special">Category: Gluten-Free Special</option>
+              <option value="Breakfast & Brunch">Category: Breakfast & Brunch</option>
+            </select>
+          </div>
+
+          <!-- Recipe Select Dropdown -->
           <div class="relative min-w-[180px]">
             <select id="recipeSelect" onchange="switchRecipe(this.value)" class="w-full bg-white border border-slate-200 text-slate-800 font-bold text-xs rounded-xl px-3 py-2 focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 shadow-xs cursor-pointer">
               <!-- Dynamically populated -->
@@ -316,26 +318,25 @@
       </div>
     </div>
 
-    <!-- Financial Scorecards (Reordered 5 Scorecards: Actual Selling Price, Food Cost, Margin, Target Price, Actual FC %) -->
     <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2.5 sm:gap-4">
       
       <!-- 1. Actual Selling Price Card -->
-      <div class="bg-gradient-to-br from-emerald-50/50 via-white to-white border border-emerald-100 rounded-2xl p-3 sm:p-4 shadow-xs print-card hover:border-emerald-300 transition-all group">
+      <div class="col-span-2 sm:col-span-1 lg:col-span-1 bg-gradient-to-br from-emerald-50/50 via-white to-white border border-emerald-100 rounded-2xl p-3.5 sm:p-4 shadow-xs print-card hover:border-emerald-300 transition-all group">
         <div class="flex justify-between items-start">
           <span class="text-[10px] sm:text-[11px] font-extrabold text-emerald-900/70 uppercase tracking-wider">Actual Selling Price</span>
           <span class="p-1.5 sm:p-2 bg-emerald-100/70 text-emerald-600 rounded-lg sm:rounded-xl group-hover:scale-110 transition-transform no-print">
             <i data-lucide="tag" class="w-3.5 h-3.5 sm:w-4 sm:h-4"></i>
           </span>
         </div>
-        <div id="cardActualSellingPrice" class="text-base sm:text-2xl font-black text-slate-900 mt-1 sm:mt-2 font-mono tracking-tight truncate">Rp 0</div>
+        <div id="cardActualSellingPrice" class="text-lg sm:text-2xl font-black text-slate-900 mt-1 sm:mt-2 font-mono tracking-tight truncate">Rp 0</div>
         <div class="flex flex-col mt-1.5 sm:mt-2 pt-1.5 sm:pt-2 border-t border-emerald-100/80 space-y-0.5 text-[10px] sm:text-[11px] text-slate-500">
-          <p id="cardActualSellingSubtext" class="font-medium text-slate-700 truncate">Net: Rp 0 | Gross: Rp 0</p>
-          <p class="text-[9px] sm:text-[10px] text-slate-400 hidden sm:block">Current menu selling price</p>
+          <p id="cardActualSellingSubtext" class="font-bold text-slate-800 break-words">Net: Rp 0 | Gross: Rp 0</p>
+          <p class="text-[9px] sm:text-[10px] text-slate-400">Current menu selling price</p>
         </div>
       </div>
 
       <!-- 2. Total Food Cost Card -->
-      <div class="bg-gradient-to-br from-slate-50 via-white to-white border border-slate-200/90 rounded-2xl p-3 sm:p-4 shadow-xs print-card hover:border-slate-300 transition-all group">
+      <div class="col-span-1 bg-gradient-to-br from-slate-50 via-white to-white border border-slate-200/90 rounded-2xl p-3 sm:p-4 shadow-xs print-card hover:border-slate-300 transition-all group">
         <div class="flex justify-between items-start">
           <span class="text-[10px] sm:text-[11px] font-extrabold text-slate-600 uppercase tracking-wider">Food Cost</span>
           <span class="p-1.5 sm:p-2 bg-slate-100 text-slate-600 rounded-lg sm:rounded-xl group-hover:scale-110 transition-transform no-print">
@@ -350,7 +351,7 @@
       </div>
 
       <!-- 3. Gross Profit Margin Card -->
-      <div class="bg-gradient-to-br from-purple-50/50 via-white to-white border border-purple-100 rounded-2xl p-3 sm:p-4 shadow-xs print-card hover:border-purple-300 transition-all group">
+      <div class="col-span-1 bg-gradient-to-br from-purple-50/50 via-white to-white border border-purple-100 rounded-2xl p-3 sm:p-4 shadow-xs print-card hover:border-purple-300 transition-all group">
         <div class="flex justify-between items-start">
           <span class="text-[10px] sm:text-[11px] font-extrabold text-purple-900/70 uppercase tracking-wider">Margin</span>
           <span class="p-1.5 sm:p-2 bg-purple-100/70 text-purple-600 rounded-lg sm:rounded-xl group-hover:scale-110 transition-transform no-print">
@@ -365,7 +366,7 @@
       </div>
 
       <!-- 4. Recommended Target Price Card -->
-      <div class="bg-gradient-to-br from-blue-50/50 via-white to-white border border-blue-100 rounded-2xl p-3 sm:p-4 shadow-xs print-card hover:border-blue-300 transition-all group">
+      <div class="col-span-1 bg-gradient-to-br from-blue-50/50 via-white to-white border border-blue-100 rounded-2xl p-3 sm:p-4 shadow-xs print-card hover:border-blue-300 transition-all group">
         <div class="flex justify-between items-start">
           <span class="text-[10px] sm:text-[11px] font-extrabold text-blue-900/70 uppercase tracking-wider">Target Price</span>
           <span class="p-1.5 sm:p-2 bg-blue-100/70 text-blue-600 rounded-lg sm:rounded-xl group-hover:scale-110 transition-transform no-print">
@@ -380,7 +381,7 @@
       </div>
 
       <!-- 5. Actual Food Cost % Card -->
-      <div class="bg-gradient-to-br from-amber-50/50 via-white to-white border border-amber-100 rounded-2xl p-3 sm:p-4 shadow-xs print-card hover:border-amber-300 transition-all group">
+      <div class="col-span-1 bg-gradient-to-br from-amber-50/50 via-white to-white border border-amber-100 rounded-2xl p-3 sm:p-4 shadow-xs print-card hover:border-amber-300 transition-all group">
         <div class="flex justify-between items-start">
           <span class="text-[10px] sm:text-[11px] font-extrabold text-amber-900/70 uppercase tracking-wider">Actual FC %</span>
           <div class="flex items-center space-x-1.5">
@@ -458,7 +459,6 @@
         </div>
       </div>
 
-      <!-- Right Column: Costing Parameters & Visual Chart -->
       <div class="space-y-6">
 
         <!-- Costing Controls Box -->
@@ -483,7 +483,7 @@
             </div>
           </div>
 
-          <!-- Target Food Cost % Control (Default: 0%) -->
+          <!-- Target Food Cost % Control -->
           <div class="space-y-1.5 pt-3 border-t border-slate-100">
             <div class="flex justify-between items-center text-xs font-semibold">
               <label for="targetFcInput" class="text-slate-700">Target Food Cost %:</label>
@@ -515,6 +515,18 @@
                 <span class="absolute right-2.5 top-1.5 text-xs text-slate-400 font-bold">%</span>
               </div>
             </div>
+          </div>
+
+          <!-- Tax Calculation Method Toggle -->
+          <div class="pt-2 border-t border-slate-100 space-y-1 text-[11px]">
+            <div class="flex items-center justify-between">
+              <span class="font-bold text-slate-700">Tax Method:</span>
+              <select id="taxCalcMethodSelect" onchange="updateTaxMethod(this.value)" class="bg-slate-100 border border-slate-200 text-slate-800 font-bold text-[10px] rounded-lg px-2 py-1 focus:outline-none focus:border-emerald-500 cursor-pointer">
+                <option value="compounded" selected>Compounded (+22.1% for 10%+11%)</option>
+                <option value="additive">Flat Additive (+21.0% for 10%+11%)</option>
+              </select>
+            </div>
+            <p id="taxMethodNote" class="text-[10px] text-slate-400">Standard PB1: Tax applied on Subtotal + Service Charge.</p>
           </div>
 
           <!-- Actual Menu Selling Price Control -->
@@ -569,6 +581,96 @@
 
   </main>
 
+  <!-- Export & Actions Pop-Up Notification Modal -->
+  <div id="exportModal" onclick="if(event.target === this) closeExportModal()" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 hidden flex items-center justify-center p-3.5 sm:p-4 no-print animate-in fade-in duration-150">
+    <div class="bg-white border border-slate-200 rounded-2xl max-w-xs sm:max-w-md w-full p-4 sm:p-5 shadow-2xl space-y-3 sm:space-y-4">
+      
+      <!-- Modal Header -->
+      <div class="flex items-center justify-between border-b border-slate-100 pb-2.5">
+        <div class="flex items-center space-x-2">
+          <div class="p-1.5 bg-emerald-100 text-emerald-700 rounded-lg shrink-0">
+            <i data-lucide="download" class="w-4 h-4"></i>
+          </div>
+          <div>
+            <h3 class="font-extrabold text-slate-900 text-sm sm:text-base leading-none">Export & Actions</h3>
+            <p class="text-[10px] sm:text-[11px] text-slate-500 font-medium mt-0.5">Select save, print or sync option</p>
+          </div>
+        </div>
+        <button onclick="closeExportModal()" class="p-1 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-lg transition-colors" title="Close">
+          <i data-lucide="x" class="w-4 h-4"></i>
+        </button>
+      </div>
+
+      <!-- Compact 2-Column Grid Options -->
+      <div class="grid grid-cols-2 gap-2">
+        
+        <!-- Push to Sheets -->
+        <button onclick="closeExportModal(); syncCurrentRecipeToGoogleSheets();" class="p-2.5 bg-slate-50 hover:bg-emerald-50 hover:border-emerald-300 border border-slate-200/80 rounded-xl transition-all flex flex-col items-center text-center space-y-1 group active:scale-95">
+          <div class="p-2 bg-emerald-100 text-emerald-700 rounded-lg group-hover:bg-emerald-600 group-hover:text-white transition-colors">
+            <i data-lucide="send" class="w-4 h-4"></i>
+          </div>
+          <span class="text-xs font-bold text-slate-800 leading-tight">Push to Sheets</span>
+          <span class="text-[9px] text-slate-500 font-medium">Sync active dish</span>
+        </button>
+
+        <!-- Pull from Sheets -->
+        <button onclick="closeExportModal(); pullFromGoogleSheets();" class="p-2.5 bg-slate-50 hover:bg-emerald-50 hover:border-emerald-300 border border-slate-200/80 rounded-xl transition-all flex flex-col items-center text-center space-y-1 group active:scale-95">
+          <div class="p-2 bg-emerald-100 text-emerald-700 rounded-lg group-hover:bg-emerald-600 group-hover:text-white transition-colors">
+            <i data-lucide="cloud-download" class="w-4 h-4"></i>
+          </div>
+          <span class="text-xs font-bold text-slate-800 leading-tight">Pull Sheets</span>
+          <span class="text-[9px] text-slate-500 font-medium">Load from cloud</span>
+        </button>
+
+        <!-- Print / PDF -->
+        <button onclick="closeExportModal(); exportToPDF();" class="p-2.5 bg-slate-50 hover:bg-blue-50 hover:border-blue-300 border border-slate-200/80 rounded-xl transition-all flex flex-col items-center text-center space-y-1 group active:scale-95">
+          <div class="p-2 bg-blue-100 text-blue-700 rounded-lg group-hover:bg-blue-600 group-hover:text-white transition-colors">
+            <i data-lucide="printer" class="w-4 h-4"></i>
+          </div>
+          <span class="text-xs font-bold text-slate-800 leading-tight">Print / PDF</span>
+          <span class="text-[9px] text-slate-500 font-medium">Save PDF sheet</span>
+        </button>
+
+        <!-- Excel (.xlsx) -->
+        <button onclick="closeExportModal(); exportToExcel();" class="p-2.5 bg-slate-50 hover:bg-emerald-50 hover:border-emerald-300 border border-slate-200/80 rounded-xl transition-all flex flex-col items-center text-center space-y-1 group active:scale-95">
+          <div class="p-2 bg-emerald-100 text-emerald-700 rounded-lg group-hover:bg-emerald-600 group-hover:text-white transition-colors">
+            <i data-lucide="file-spreadsheet" class="w-4 h-4"></i>
+          </div>
+          <span class="text-xs font-bold text-slate-800 leading-tight">Export Excel</span>
+          <span class="text-[9px] text-slate-500 font-medium">Download .xlsx</span>
+        </button>
+
+        <!-- Backup JSON -->
+        <button onclick="closeExportModal(); exportToJSON();" class="p-2.5 bg-slate-50 hover:bg-purple-50 hover:border-purple-300 border border-slate-200/80 rounded-xl transition-all flex flex-col items-center text-center space-y-1 group active:scale-95">
+          <div class="p-2 bg-purple-100 text-purple-700 rounded-lg group-hover:bg-purple-600 group-hover:text-white transition-colors">
+            <i data-lucide="file-json" class="w-4 h-4"></i>
+          </div>
+          <span class="text-xs font-bold text-slate-800 leading-tight">Backup JSON</span>
+          <span class="text-[9px] text-slate-500 font-medium">Full data backup</span>
+        </button>
+
+        <!-- Restore JSON -->
+        <label class="p-2.5 bg-slate-50 hover:bg-purple-50 hover:border-purple-300 border border-slate-200/80 rounded-xl transition-all flex flex-col items-center text-center space-y-1 group active:scale-95 cursor-pointer">
+          <div class="p-2 bg-purple-100 text-purple-700 rounded-lg group-hover:bg-purple-600 group-hover:text-white transition-colors">
+            <i data-lucide="upload-cloud" class="w-4 h-4"></i>
+          </div>
+          <span class="text-xs font-bold text-slate-800 leading-tight">Restore JSON</span>
+          <span class="text-[9px] text-slate-500 font-medium">Import backup</span>
+          <input type="file" id="importJsonInput" onchange="closeExportModal(); importFromJSON(event);" class="hidden" accept=".json">
+        </label>
+
+      </div>
+
+      <!-- Footer Action -->
+      <div class="pt-2 border-t border-slate-100">
+        <button onclick="closeExportModal()" class="w-full py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-xl transition-colors">
+          Cancel
+        </button>
+      </div>
+
+    </div>
+  </div>
+
   <!-- Global Custom Confirmation Modal -->
   <div id="confirmModal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-xs z-50 hidden flex items-center justify-center p-4 no-print animate-in fade-in duration-150">
     <div class="bg-white border border-slate-200 rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-4">
@@ -601,6 +703,25 @@
         <div>
           <label class="block text-xs font-bold text-slate-700 mb-1">Recipe Name:</label>
           <input type="text" id="newRecipeNameInput" placeholder="e.g. Wagyu Beef Burger" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs font-semibold focus:outline-none focus:border-emerald-500 focus:bg-white">
+        </div>
+        <div>
+          <label class="block text-xs font-bold text-slate-700 mb-1">Food Category:</label>
+          <select id="newRecipeCategoryInput" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs font-semibold focus:outline-none focus:border-emerald-500 focus:bg-white cursor-pointer">
+            <option value="Main Course" selected>Main Course</option>
+            <option value="Appetizer">Appetizer</option>
+            <option value="Soup & Salad">Soup & Salad</option>
+            <option value="Dessert">Dessert</option>
+            <option value="Beverage">Beverage</option>
+            <option value="Side Dish">Side Dish</option>
+            <option value="Bakery & Pastry">Bakery & Pastry</option>
+            <option value="Chef Special">Chef Special</option>
+            <option value="Sub-Recipe / Sauce">Sub-Recipe / Sauce</option>
+            <option value="Vegan">Vegan</option>
+            <option value="Vegetarian">Vegetarian</option>
+            <option value="Plant-Based / Dairy-Free">Plant-Based / Dairy-Free</option>
+            <option value="Gluten-Free Special">Gluten-Free Special</option>
+            <option value="Breakfast & Brunch">Breakfast & Brunch</option>
+          </select>
         </div>
         <div>
           <label class="block text-xs font-bold text-slate-700 mb-1">Description / Yield Notes:</label>
@@ -805,7 +926,7 @@
               <span>Bi-Directional Google Sheets Sync:</span>
             </p>
             <p class="text-emerald-900">
-              When updating your Apps Script code below, both <span class="font-bold font-mono">doGet</span> and <span class="font-bold font-mono">doPost</span> functions are enabled. You can now save recipes to Google Sheets and read/import them back in any browser or session!
+              When updating your Apps Script code below, both <span class="font-bold font-mono">doGet</span> and <span class="font-bold font-mono">doPost</span> functions are enabled. Food Categories and Master Price Libraries sync automatically!
             </p>
           </div>
 
@@ -932,10 +1053,11 @@ function doPost(e) {
     sheet.getRange(1, 1).setValue("Recipe: " + data.name).setFontWeight("bold").setFontSize(14);
     sheet.getRange(2, 1).setValue("Description: " + (data.description || ""));
     sheet.getRange(3, 1).setValue("Currency: " + (data.currency || "IDR"));
+    sheet.getRange(4, 1).setValue("Category: " + (data.category || "Main Course"));
     
     // Ingredients Header
     var headers = [["#", "Ingredient Name", "Quantity", "Unit", "Unit Price", "Total Cost"]];
-    sheet.getRange(5, 1, 1, 6).setValues(headers).setFontWeight("bold").setBackground("#d1fae5");
+    sheet.getRange(6, 1, 1, 6).setValues(headers).setFontWeight("bold").setBackground("#d1fae5");
     
     // Ingredients Rows
     var rows = [];
@@ -943,11 +1065,11 @@ function doPost(e) {
       data.ingredients.forEach(function(ing, index) {
         rows.push([index + 1, ing.name, ing.qty, ing.unit, ing.unitPrice, ing.lineTotal]);
       });
-      sheet.getRange(6, 1, rows.length, 6).setValues(rows);
+      sheet.getRange(7, 1, rows.length, 6).setValues(rows);
     }
     
     // Summary Metrics
-    var startRow = 6 + (rows.length || 1) + 1;
+    var startRow = 7 + (rows.length || 1) + 1;
     var summary = [
       ["Subtotal Ingredients Cost:", "", "", "", "", data.subtotal],
       ["Q-Factor %:", "", "", "", "", data.qFactor + "%"],
@@ -956,6 +1078,7 @@ function doPost(e) {
       ["Target Food Cost %:", "", "", "", "", data.targetFc + "%"],
       ["Service Charge %:", "", "", "", "", data.servicePercent + "%"],
       ["Government Tax %:", "", "", "", "", data.taxPercent + "%"],
+      ["Tax Method:", "", "", "", "", data.taxMethod || "compounded"],
       ["Price Mode:", "", "", "", "", data.priceMode],
       ["Recommended Price (Net):", "", "", "", "", data.recommendedNetPrice],
       ["Recommended Price (Gross):", "", "", "", "", data.recommendedGrossPrice],
@@ -995,16 +1118,24 @@ function doPost(e) {
       'tbsp', 'tsp', 'cup', 'oz', 'lb', 'can', 'pack', 'box'
     ];
 
+    const FOOD_CATEGORIES = [
+      'Main Course', 'Appetizer', 'Soup & Salad', 'Dessert', 
+      'Beverage', 'Side Dish', 'Bakery & Pastry', 'Chef Special', 'Sub-Recipe / Sauce',
+      'Vegan', 'Vegetarian', 'Plant-Based / Dairy-Free', 'Gluten-Free Special', 'Breakfast & Brunch'
+    ];
+
     let recipes = [
       {
         id: "rec_1",
         name: "My First Recipe",
+        category: "Main Course",
         description: "Add ingredients below to calculate food cost and recommended selling price.",
         currency: "IDR",
         qFactor: 10,
         targetFc: 0,
         servicePercent: 10,
         taxPercent: 11,
+        taxMethod: "compounded",
         priceMode: "gross",
         projectedPrice: 0,
         ingredients: []
@@ -1015,7 +1146,7 @@ function doPost(e) {
     let currentCurrency = "IDR";
     let chartInstance = null;
     let pendingConfirmAction = null;
-    let googleWebhookUrl = "";
+    let googleWebhookUrl = "https://script.google.com/macros/s/AKfycbwSxIN9fErVmN6exB_FkSNwqB_PKaFCUCUGqZ6PRNC7DDAfMQuOwE0nVMJ9nijs380/exec";
     let parsedExcelData = [];
     let domCache = {};
 
@@ -1056,6 +1187,7 @@ function doPost(e) {
     function initDomCache() {
       domCache = {
         recipeTitleInput: document.getElementById('recipeTitleInput'),
+        recipeCategorySelect: document.getElementById('recipeCategorySelect'),
         recipeDescInput: document.getElementById('recipeDescInput'),
         qFactorInput: document.getElementById('qFactorInput'),
         targetFcInput: document.getElementById('targetFcInput'),
@@ -1098,11 +1230,13 @@ function doPost(e) {
         pullFromGoogleSheets(true);
       }
 
-      document.addEventListener('click', (e) => {
-        const drop = document.getElementById('exportMenu');
-        const btn = document.getElementById('exportDropdownBtn');
-        if (drop && btn && !drop.contains(e.target) && !btn.contains(e.target)) {
-          drop.classList.add('hidden');
+      document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') {
+          closeExportModal();
+          closeGoogleSheetsModal();
+          closeMasterModal();
+          closeNewRecipeModal();
+          closePasteExcelModal();
         }
       });
     });
@@ -1185,12 +1319,14 @@ function doPost(e) {
             {
               id: "rec_1",
               name: "My First Recipe",
+              category: "Main Course",
               description: "Add ingredients below to calculate food cost and recommended selling price.",
               currency: "IDR",
               qFactor: 10,
               targetFc: 0,
               servicePercent: 10,
               taxPercent: 11,
+              taxMethod: "compounded",
               priceMode: "gross",
               projectedPrice: 0,
               ingredients: []
@@ -1208,22 +1344,81 @@ function doPost(e) {
     function populateRecipeDropdown() {
       const select = domCache.recipeSelect || document.getElementById('recipeSelect');
       if (!select) return;
+
+      const filterVal = document.getElementById('categoryFilterSelect')?.value || 'ALL';
+      const filtered = filterVal === 'ALL' 
+        ? recipes 
+        : recipes.filter(r => (r.category || 'Main Course') === filterVal);
+
       const fragment = document.createDocumentFragment();
-      recipes.forEach(r => {
+
+      if (filtered.length === 0) {
         const opt = document.createElement('option');
-        opt.value = r.id;
-        opt.textContent = r.name;
-        if (r.id === activeRecipeId) opt.selected = true;
+        opt.value = "";
+        opt.textContent = "No recipes in category";
+        opt.disabled = true;
+        opt.selected = true;
         fragment.appendChild(opt);
-      });
+      } else {
+        filtered.forEach(r => {
+          const opt = document.createElement('option');
+          opt.value = r.id;
+          opt.textContent = r.name;
+          if (r.id === activeRecipeId) opt.selected = true;
+          fragment.appendChild(opt);
+        });
+      }
+
       select.innerHTML = '';
       select.appendChild(fragment);
     }
 
+    function filterRecipesByCategory(category) {
+      const filtered = category === 'ALL'
+        ? recipes
+        : recipes.filter(r => (r.category || 'Main Course') === category);
+
+      if (filtered.length > 0) {
+        const matchesActive = filtered.some(r => r.id === activeRecipeId);
+        if (!matchesActive) {
+          activeRecipeId = filtered[0].id;
+          renderActiveRecipe();
+        } else {
+          populateRecipeDropdown();
+        }
+      } else {
+        populateRecipeDropdown();
+      }
+    }
+
     function switchRecipe(id) {
+      if (!id) return;
       activeRecipeId = id;
       saveLocalStorageDataImmediate();
       renderActiveRecipe();
+    }
+
+    function getTaxSvcMultiplier(recipe) {
+      const svc = parseNumeric(recipe.servicePercent) / 100;
+      const tax = parseNumeric(recipe.taxPercent) / 100;
+      if (recipe.taxMethod === 'additive') {
+        return 1 + svc + tax;
+      }
+      // Default: Compounded (Indonesian PB1 Standard: Subtotal * (1 + Svc) * (1 + Tax))
+      return (1 + svc) * (1 + tax);
+    }
+
+    function updateTaxMethod(val) {
+      const recipe = getActiveRecipe();
+      recipe.taxMethod = val;
+      const note = document.getElementById('taxMethodNote');
+      if (note) {
+        note.textContent = val === 'additive' 
+          ? "Flat Additive: Net + 10% + 11% = 121% total."
+          : "Standard PB1: Tax applied on Subtotal + Service Charge = 122.1% total.";
+      }
+      saveLocalStorageData();
+      updateCalculations();
     }
 
     function renderActiveRecipe() {
@@ -1231,12 +1426,23 @@ function doPost(e) {
       if (!recipe) return;
 
       if (domCache.recipeTitleInput) domCache.recipeTitleInput.value = recipe.name || '';
+      if (domCache.recipeCategorySelect) domCache.recipeCategorySelect.value = recipe.category || 'Main Course';
       if (domCache.recipeDescInput) domCache.recipeDescInput.value = recipe.description || '';
       if (domCache.qFactorInput) domCache.qFactorInput.value = recipe.qFactor ?? 10;
       if (domCache.targetFcInput) domCache.targetFcInput.value = recipe.targetFc ?? 0;
       if (domCache.servicePercentInput) domCache.servicePercentInput.value = recipe.servicePercent ?? 10;
       if (domCache.taxPercentInput) domCache.taxPercentInput.value = recipe.taxPercent ?? 11;
       if (domCache.projectedPriceInput) domCache.projectedPriceInput.value = recipe.projectedPrice ?? 0;
+
+      const taxMethodSelect = document.getElementById('taxCalcMethodSelect');
+      if (taxMethodSelect) taxMethodSelect.value = recipe.taxMethod || 'compounded';
+      
+      const note = document.getElementById('taxMethodNote');
+      if (note) {
+        note.textContent = (recipe.taxMethod === 'additive')
+          ? "Flat Additive: Net + 10% + 11% = 121% total."
+          : "Standard PB1: Tax applied on Subtotal + Service Charge = 122.1% total.";
+      }
 
       if (recipe.currency && currencies[recipe.currency]) {
         currentCurrency = recipe.currency;
@@ -1257,6 +1463,13 @@ function doPost(e) {
       recipe.name = val || "Untitled Recipe";
       populateRecipeDropdown();
       saveLocalStorageData();
+    }
+
+    function updateRecipeCategory(val) {
+      const recipe = getActiveRecipe();
+      recipe.category = val || "Main Course";
+      saveLocalStorageData();
+      populateRecipeDropdown();
     }
 
     function updateRecipeDesc(val) {
@@ -1352,6 +1565,27 @@ function doPost(e) {
       if (window.lucide) lucide.createIcons();
     }
 
+    function updateIngredient(index, field, value) {
+      const recipe = getActiveRecipe();
+      if (!recipe.ingredients[index]) return;
+
+      if (field === 'qty' || field === 'unitPrice') {
+        recipe.ingredients[index][field] = parseNumeric(value);
+      } else if (field === 'name') {
+        recipe.ingredients[index].name = value;
+        if (masterLibrary[value]) {
+          recipe.ingredients[index].unit = masterLibrary[value].unit || recipe.ingredients[index].unit;
+          recipe.ingredients[index].unitPrice = parseNumeric(masterLibrary[value].unitPrice);
+          renderIngredientsTable();
+        }
+      } else {
+        recipe.ingredients[index][field] = value;
+      }
+
+      saveLocalStorageData();
+      updateCalculations();
+    }
+
     function addIngredientRow(data = null) {
       const recipe = getActiveRecipe();
       const newItem = data || { name: "", qty: 1, unit: "kg", unitPrice: 0 };
@@ -1369,35 +1603,6 @@ function doPost(e) {
       updateCalculations();
     }
 
-    function updateIngredient(index, field, value) {
-      const recipe = getActiveRecipe();
-      if (!recipe.ingredients[index]) return;
-
-      if (field === 'qty' || field === 'unitPrice') {
-        recipe.ingredients[index][field] = parseNumeric(value);
-      } else {
-        recipe.ingredients[index][field] = value;
-      }
-
-      const nameKey = recipe.ingredients[index].name ? recipe.ingredients[index].name.trim() : '';
-      if (nameKey) {
-        if (field === 'name' && masterLibrary[nameKey]) {
-          recipe.ingredients[index].unitPrice = masterLibrary[nameKey].unitPrice;
-          recipe.ingredients[index].unit = masterLibrary[nameKey].unit;
-        } else if (field === 'unitPrice' || field === 'unit') {
-          masterLibrary[nameKey] = {
-            unit: recipe.ingredients[index].unit || 'pcs',
-            unitPrice: parseNumeric(recipe.ingredients[index].unitPrice)
-          };
-          updateMasterDatalist();
-        }
-      }
-
-      saveLocalStorageData();
-      renderIngredientsTable();
-      updateCalculations();
-    }
-
     function setPriceMode(mode) {
       const recipe = getActiveRecipe();
       recipe.priceMode = mode;
@@ -1409,7 +1614,6 @@ function doPost(e) {
     function setPriceModeUI(mode) {
       const grossBtn = document.getElementById('priceModeGrossBtn');
       const netBtn = document.getElementById('priceModeNetBtn');
-
       if (grossBtn && netBtn) {
         if (mode === 'gross') {
           grossBtn.className = "px-2 py-0.5 rounded-lg font-bold bg-white text-emerald-700 shadow-xs";
@@ -1434,7 +1638,7 @@ function doPost(e) {
       const totalFoodCost = subtotal + qFactorCost;
       const recNet = totalFoodCost / (targetFc / 100);
 
-      const taxSvcMultiplier = (1 + (parseNumeric(recipe.servicePercent) / 100)) * (1 + (parseNumeric(recipe.taxPercent) / 100));
+      const taxSvcMultiplier = getTaxSvcMultiplier(recipe);
       const recGross = recNet * taxSvcMultiplier;
 
       recipe.projectedPrice = recipe.priceMode === 'gross' ? Math.round(recGross) : Math.round(recNet);
@@ -1461,7 +1665,7 @@ function doPost(e) {
       const totalFoodCost = subtotal + qFactorCost;
 
       const recommendedNet = recipe.targetFc > 0 ? (totalFoodCost / (recipe.targetFc / 100)) : 0;
-      const taxSvcMultiplier = (1 + (recipe.servicePercent / 100)) * (1 + (recipe.taxPercent / 100));
+      const taxSvcMultiplier = getTaxSvcMultiplier(recipe);
       const recommendedGross = recommendedNet * taxSvcMultiplier;
 
       let actualNet = recipe.projectedPrice;
@@ -1491,7 +1695,6 @@ function doPost(e) {
       if (domCache.cardGrossMargin) domCache.cardGrossMargin.textContent = formatCurrency(grossMargin);
       if (domCache.cardMarginPercent) domCache.cardMarginPercent.textContent = "Net Profit Margin: " + marginPct.toFixed(1) + "%";
       
-      // Update Dual Display: Actual Net & Actual Gross Price
       if (domCache.calcNetPriceDisplay) domCache.calcNetPriceDisplay.textContent = formatCurrency(actualNet);
       if (domCache.calcGrossPriceDisplay) domCache.calcGrossPriceDisplay.textContent = formatCurrency(actualGross);
 
@@ -1582,8 +1785,10 @@ function doPost(e) {
 
     function openNewRecipeModal() {
       const nameIn = document.getElementById('newRecipeNameInput');
+      const catIn = document.getElementById('newRecipeCategoryInput');
       const descIn = document.getElementById('newRecipeDescInput');
       if (nameIn) nameIn.value = '';
+      if (catIn) catIn.value = 'Main Course';
       if (descIn) descIn.value = '';
       document.getElementById('newRecipeModal')?.classList.remove('hidden');
     }
@@ -1594,18 +1799,21 @@ function doPost(e) {
 
     function createNewRecipe() {
       const name = document.getElementById('newRecipeNameInput')?.value.trim() || "New Recipe";
+      const cat = document.getElementById('newRecipeCategoryInput')?.value || "Main Course";
       const desc = document.getElementById('newRecipeDescInput')?.value.trim() || "";
 
       const newId = "rec_" + Date.now();
       recipes.push({
         id: newId,
         name: name,
+        category: cat,
         description: desc,
         currency: currentCurrency,
         qFactor: 10,
         targetFc: 0,
         servicePercent: 10,
         taxPercent: 11,
+        taxMethod: "compounded",
         priceMode: "gross",
         projectedPrice: 0,
         ingredients: []
@@ -1865,7 +2073,7 @@ function doPost(e) {
       const targetFc = parseNumeric(recipe.targetFc);
       const recommendedNetPrice = targetFc > 0 ? (totalFoodCost / (targetFc / 100)) : 0;
       
-      const taxSvcMultiplier = (1 + (parseNumeric(recipe.servicePercent) / 100)) * (1 + (parseNumeric(recipe.taxPercent) / 100));
+      const taxSvcMultiplier = getTaxSvcMultiplier(recipe);
       const recommendedGrossPrice = recommendedNetPrice * taxSvcMultiplier;
 
       const projectedPrice = parseNumeric(recipe.projectedPrice);
@@ -1886,12 +2094,14 @@ function doPost(e) {
       return {
         id: recipe.id,
         name: recipe.name,
+        category: recipe.category || 'Main Course',
         description: recipe.description,
         currency: currentCurrency,
         qFactor: parseNumeric(recipe.qFactor),
         targetFc: parseNumeric(recipe.targetFc),
         servicePercent: parseNumeric(recipe.servicePercent),
         taxPercent: parseNumeric(recipe.taxPercent),
+        taxMethod: recipe.taxMethod || 'compounded',
         projectedPrice: parseNumeric(recipe.projectedPrice),
         priceMode: recipe.priceMode || 'gross',
         subtotal: subtotal,
@@ -2017,10 +2227,12 @@ function doPost(e) {
             data.recipes.forEach(remoteRec => {
               if (!remoteRec.name) return;
 
+              remoteRec.category = remoteRec.category || 'Main Course';
               remoteRec.qFactor = remoteRec.qFactor !== undefined ? parsePercentage(remoteRec.qFactor) : 10;
               remoteRec.targetFc = remoteRec.targetFc !== undefined ? parsePercentage(remoteRec.targetFc) : 0;
               remoteRec.servicePercent = remoteRec.servicePercent !== undefined ? parsePercentage(remoteRec.servicePercent) : 10;
               remoteRec.taxPercent = remoteRec.taxPercent !== undefined ? parsePercentage(remoteRec.taxPercent) : 11;
+              remoteRec.taxMethod = remoteRec.taxMethod || 'compounded';
               remoteRec.projectedPrice = remoteRec.projectedPrice !== undefined ? parseNumeric(remoteRec.projectedPrice) : 0;
               remoteRec.priceMode = remoteRec.priceMode || 'gross';
               remoteRec.currency = remoteRec.currency || currentCurrency;
@@ -2040,12 +2252,14 @@ function doPost(e) {
             recipes.unshift({
               id: newBlankId,
               name: "New Blank Recipe",
+              category: "Main Course",
               description: "Enter new dish ingredients and pricing...",
               currency: currentCurrency,
               qFactor: 10,
               targetFc: 0,
               servicePercent: 10,
               taxPercent: 11,
+              taxMethod: "compounded",
               priceMode: "gross",
               projectedPrice: 0,
               ingredients: []
@@ -2157,96 +2371,118 @@ function doPost(e) {
       pendingConfirmAction = null;
     }
 
-    function toggleExportMenu() {
-      document.getElementById('exportMenu')?.classList.toggle('hidden');
+    function openExportModal() {
+      document.getElementById('exportModal')?.classList.remove('hidden');
+      if (window.lucide) lucide.createIcons();
+    }
+
+    function closeExportModal() {
+      document.getElementById('exportModal')?.classList.add('hidden');
     }
 
     function exportToPDF() {
-      document.getElementById('exportMenu')?.classList.add('hidden');
+      closeExportModal();
       window.print();
     }
 
     function exportToExcel() {
-      document.getElementById('exportMenu')?.classList.add('hidden');
-      const recipe = getActiveRecipe();
-
-      const subtotal = recipe.ingredients.reduce((s, i) => s + (parseNumeric(i.qty) * parseNumeric(i.unitPrice)), 0);
-      const qFactorCost = subtotal * (parseNumeric(recipe.qFactor) / 100);
-      const totalFoodCost = subtotal + qFactorCost;
-      const preliminaryPriceNet = recipe.targetFc > 0 ? (totalFoodCost / (recipe.targetFc / 100)) : 0;
-      
-      const taxSvcMultiplier = (1 + ((parseNumeric(recipe.servicePercent) || 0) / 100)) * (1 + ((parseNumeric(recipe.taxPercent) || 0) / 100));
-      const preliminaryPriceGross = preliminaryPriceNet * taxSvcMultiplier;
-
-      let actualNetPrice = 0;
-      let actualGrossPrice = 0;
-      if (recipe.priceMode === 'gross') {
-        actualGrossPrice = parseNumeric(recipe.projectedPrice);
-        actualNetPrice = taxSvcMultiplier > 0 ? (actualGrossPrice / taxSvcMultiplier) : actualGrossPrice;
-      } else {
-        actualNetPrice = parseNumeric(recipe.projectedPrice);
-        actualGrossPrice = actualNetPrice * taxSvcMultiplier;
+      closeExportModal();
+      if (typeof XLSX === 'undefined') {
+        showToast("Export Error", "Excel library failed to load. Please check your internet connection.", "error", 4000);
+        return;
       }
 
-      const actualFcPct = actualNetPrice > 0 ? ((totalFoodCost / actualNetPrice) * 100) : 0;
-      const grossMargin = actualNetPrice - totalFoodCost;
+      try {
+        const recipe = getActiveRecipe();
 
-      const excelData = [
-        ["Recipe Card:", recipe.name],
-        ["Description:", recipe.description],
-        ["Currency:", currentCurrency],
-        [],
-        ["#", "Ingredient Name", "Quantity", "Unit", "Unit Price", "Total Price"],
-        ...recipe.ingredients.map((ing, idx) => [
-          idx + 1,
-          ing.name,
-          parseNumeric(ing.qty),
-          ing.unit,
-          parseNumeric(ing.unitPrice),
-          parseNumeric(ing.qty) * parseNumeric(ing.unitPrice)
-        ]),
-        [],
-        ["Subtotal Ingredients:", "", "", "", "", subtotal],
-        [`Q-Factor (${recipe.qFactor}%):`, "", "", "", "", qFactorCost],
-        ["Total Food Cost:", "", "", "", "", totalFoodCost],
-        [`Recommended Price (Net):`, "", "", "", "", preliminaryPriceNet],
-        [`Service Charge (${recipe.servicePercent}%):`, "", "", "", "", preliminaryPriceNet * (recipe.servicePercent / 100)],
-        [`Government Tax (${recipe.taxPercent}%):`, "", "", "", "", (preliminaryPriceNet * (1 + recipe.servicePercent / 100)) * (recipe.taxPercent / 100)],
-        ["Recommended Selling Price (Gross Inc. Tax/Svc):", "", "", "", "", preliminaryPriceGross],
-        [],
-        [`Actual Menu Price (${(recipe.priceMode || 'gross').toUpperCase()}):`, "", "", "", "", recipe.projectedPrice],
-        ["Actual Net Sales Revenue:", "", "", "", "", actualNetPrice],
-        ["Actual Gross Customer Price:", "", "", "", "", actualGrossPrice],
-        ["Actual Food Cost % (on Net Revenue):", "", "", "", "", actualFcPct.toFixed(2) + "%"],
-        ["Gross Margin / Net Profit:", "", "", "", "", grossMargin]
-      ];
+        const subtotal = recipe.ingredients.reduce((s, i) => s + (parseNumeric(i.qty) * parseNumeric(i.unitPrice)), 0);
+        const qFactorCost = subtotal * (parseNumeric(recipe.qFactor) / 100);
+        const totalFoodCost = subtotal + qFactorCost;
+        const preliminaryPriceNet = recipe.targetFc > 0 ? (totalFoodCost / (recipe.targetFc / 100)) : 0;
+        
+        const taxSvcMultiplier = getTaxSvcMultiplier(recipe);
+        const preliminaryPriceGross = preliminaryPriceNet * taxSvcMultiplier;
 
-      const ws = XLSX.utils.aoa_to_sheet(excelData);
-      const wb = XLSX.utils.book_new();
-      XLSX.utils.book_append_sheet(wb, ws, "Recipe Costing");
+        let actualNetPrice = 0;
+        let actualGrossPrice = 0;
+        if (recipe.priceMode === 'gross') {
+          actualGrossPrice = parseNumeric(recipe.projectedPrice);
+          actualNetPrice = taxSvcMultiplier > 0 ? (actualGrossPrice / taxSvcMultiplier) : actualGrossPrice;
+        } else {
+          actualNetPrice = parseNumeric(recipe.projectedPrice);
+          actualGrossPrice = actualNetPrice * taxSvcMultiplier;
+        }
 
-      XLSX.writeFile(wb, `${recipe.name.replace(/[^a-z0-9]/gi, '_')}_FoodCost.xlsx`);
+        const actualFcPct = actualNetPrice > 0 ? ((totalFoodCost / actualNetPrice) * 100) : 0;
+        const grossMargin = actualNetPrice - totalFoodCost;
+
+        const excelData = [
+          ["Recipe Card:", recipe.name],
+          ["Category:", recipe.category || "Main Course"],
+          ["Description:", recipe.description],
+          ["Currency:", currentCurrency],
+          [],
+          ["#", "Ingredient Name", "Quantity", "Unit", "Unit Price", "Total Price"],
+          ...recipe.ingredients.map((ing, idx) => [
+            idx + 1,
+            ing.name,
+            parseNumeric(ing.qty),
+            ing.unit,
+            parseNumeric(ing.unitPrice),
+            parseNumeric(ing.qty) * parseNumeric(ing.unitPrice)
+          ]),
+          [],
+          ["Subtotal Ingredients:", "", "", "", "", subtotal],
+          [`Q-Factor (${recipe.qFactor}%):`, "", "", "", "", qFactorCost],
+          ["Total Food Cost:", "", "", "", "", totalFoodCost],
+          [`Recommended Price (Net):`, "", "", "", "", preliminaryPriceNet],
+          [`Service Charge (${recipe.servicePercent}%):`, "", "", "", "", preliminaryPriceNet * (recipe.servicePercent / 100)],
+          [`Government Tax (${recipe.taxPercent}%):`, "", "", "", "", (preliminaryPriceNet * (1 + recipe.servicePercent / 100)) * (recipe.taxPercent / 100)],
+          ["Tax Method:", "", "", "", "", recipe.taxMethod || "compounded"],
+          ["Recommended Selling Price (Gross Inc. Tax/Svc):", "", "", "", "", preliminaryPriceGross],
+          [],
+          [`Actual Menu Price (${(recipe.priceMode || 'gross').toUpperCase()}):`, "", "", "", "", recipe.projectedPrice],
+          ["Actual Net Sales Revenue:", "", "", "", "", actualNetPrice],
+          ["Actual Gross Customer Price:", "", "", "", "", actualGrossPrice],
+          ["Actual Food Cost % (on Net Revenue):", "", "", "", "", actualFcPct.toFixed(2) + "%"],
+          ["Gross Margin / Net Profit:", "", "", "", "", grossMargin]
+        ];
+
+        const ws = XLSX.utils.aoa_to_sheet(excelData);
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, "Recipe Costing");
+
+        XLSX.writeFile(wb, `${recipe.name.replace(/[^a-z0-9]/gi, '_')}_FoodCost.xlsx`);
+        showToast("Excel Exported", `"${recipe.name}" saved as Excel spreadsheet.`, "success", 3000);
+      } catch(err) {
+        showToast("Export Error", "Failed to generate Excel file: " + err.message, "error", 4000);
+      }
     }
 
     function exportToJSON() {
-      document.getElementById('exportMenu')?.classList.add('hidden');
-      const backupData = {
-        recipes,
-        masterLibrary,
-        exportedAt: new Date().toISOString()
-      };
-
-      const blob = new Blob([JSON.stringify(backupData, null, 2)], { type: 'application/json' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `ChefCost_Backup_${new Date().toISOString().slice(0, 10)}.json`;
-      a.click();
-      URL.revokeObjectURL(url);
+      closeExportModal();
+      try {
+        const data = {
+          version: "2.4",
+          exportDate: new Date().toISOString(),
+          masterLibrary: masterLibrary,
+          recipes: recipes
+        };
+        const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(data, null, 2));
+        const downloadAnchor = document.createElement('a');
+        downloadAnchor.setAttribute("href", dataStr);
+        downloadAnchor.setAttribute("download", `ChefCost_Backup_${new Date().toISOString().slice(0,10)}.json`);
+        document.body.appendChild(downloadAnchor);
+        downloadAnchor.click();
+        downloadAnchor.remove();
+        showToast("Backup Created", "All recipes and library exported as JSON.", "success", 3000);
+      } catch(e) {
+        showToast("Export Error", "Failed to backup JSON: " + e.message, "error", 4000);
+      }
     }
 
     function importFromJSON(event) {
-      document.getElementById('exportMenu')?.classList.add('hidden');
+      closeExportModal();
       const file = event.target.files[0];
       if (!file) return;
 
@@ -2268,6 +2504,8 @@ function doPost(e) {
           }
         } catch(err) {
           showConfirmModal("Import Error", "Error reading file: " + err.message, null, true);
+        } finally {
+          event.target.value = '';
         }
       };
       reader.readAsText(file);
