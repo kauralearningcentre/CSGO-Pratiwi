@@ -1530,23 +1530,29 @@ function doPost(e) {
         tr.innerHTML = `
           <td class="py-2 px-1.5 text-center text-slate-400 font-bold text-[11px]">${index + 1}</td>
           <td class="py-2 px-2">
-            <input type="text" list="masterIngredientsList" value="${ing.name || ''}" onchange="updateIngredient(${index}, 'name', this.value)" 
+            <input type="text" list="masterIngredientsList" value="${ing.name || ''}" 
+              oninput="updateIngredient(${index}, 'name', this.value)"
+              onchange="updateIngredient(${index}, 'name', this.value, true)" 
               placeholder="e.g. Flour" class="w-full bg-transparent border-b border-transparent hover:border-slate-300 focus:border-emerald-500 rounded px-1.5 py-1 focus:outline-none font-medium text-xs">
           </td>
           <td class="py-2 px-1.5">
-            <input type="text" inputmode="decimal" value="${ing.qty ?? 0}" onchange="updateIngredient(${index}, 'qty', this.value)" 
+            <input type="text" inputmode="decimal" value="${ing.qty ?? 0}" 
+              oninput="updateIngredient(${index}, 'qty', this.value)"
+              onchange="updateIngredient(${index}, 'qty', this.value, true)" 
               class="w-full bg-slate-50 border border-slate-200 rounded-lg px-2 py-1.5 text-xs font-semibold focus:outline-none focus:border-emerald-500">
           </td>
           <td class="py-2 px-1.5">
-            <select onchange="updateIngredient(${index}, 'unit', this.value)" class="w-full bg-slate-50 border border-slate-200 rounded-lg px-1.5 py-1.5 text-xs font-semibold focus:outline-none focus:border-emerald-500">
+            <select onchange="updateIngredient(${index}, 'unit', this.value, true)" class="w-full bg-slate-50 border border-slate-200 rounded-lg px-1.5 py-1.5 text-xs font-semibold focus:outline-none focus:border-emerald-500">
               ${unitOptionsHtml}
             </select>
           </td>
           <td class="py-2 px-2">
-            <input type="text" inputmode="decimal" value="${ing.unitPrice ?? 0}" onchange="updateIngredient(${index}, 'unitPrice', this.value)" 
+            <input type="text" inputmode="decimal" value="${ing.unitPrice ?? 0}" 
+              oninput="updateIngredient(${index}, 'unitPrice', this.value)"
+              onchange="updateIngredient(${index}, 'unitPrice', this.value, true)" 
               class="w-full bg-slate-50 border border-slate-200 rounded-lg px-2 py-1.5 text-xs font-mono font-semibold focus:outline-none focus:border-emerald-500">
           </td>
-          <td class="py-2 px-2 text-right font-mono font-bold text-slate-800 text-xs">
+          <td id="lineTotal_${index}" class="py-2 px-2 text-right font-mono font-bold text-slate-800 text-xs">
             ${formatCurrency(lineTotal)}
           </td>
           <td class="py-2 px-1 text-center no-print">
@@ -1565,7 +1571,7 @@ function doPost(e) {
       if (window.lucide) lucide.createIcons();
     }
 
-    function updateIngredient(index, field, value) {
+    function updateIngredient(index, field, value, reRender = false) {
       const recipe = getActiveRecipe();
       if (!recipe.ingredients[index]) return;
 
@@ -1576,13 +1582,23 @@ function doPost(e) {
         if (masterLibrary[value]) {
           recipe.ingredients[index].unit = masterLibrary[value].unit || recipe.ingredients[index].unit;
           recipe.ingredients[index].unitPrice = parseNumeric(masterLibrary[value].unitPrice);
-          renderIngredientsTable();
+          reRender = true;
         }
       } else {
         recipe.ingredients[index][field] = value;
       }
 
+      // Dynamically update row line total cell
+      const lineTotalCell = document.getElementById(`lineTotal_${index}`);
+      if (lineTotalCell) {
+        const lineTotal = parseNumeric(recipe.ingredients[index].qty) * parseNumeric(recipe.ingredients[index].unitPrice);
+        lineTotalCell.textContent = formatCurrency(lineTotal);
+      }
+
       saveLocalStorageData();
+      if (reRender) {
+        renderIngredientsTable();
+      }
       updateCalculations();
     }
 
@@ -2393,37 +2409,77 @@ function doPost(e) {
       }
 
       try {
-        const recipe = getActiveRecipe();
+        const wb = XLSX.utils.book_new();
 
-        const subtotal = recipe.ingredients.reduce((s, i) => s + (parseNumeric(i.qty) * parseNumeric(i.unitPrice)), 0);
-        const qFactorCost = subtotal * (parseNumeric(recipe.qFactor) / 100);
+        // 1. Create Overview Summary Sheet of All Recipes with Food Categories
+        const summaryRows = [
+          ["COGS PRATIWI RESTAURANT - KAURA BALI"],
+          ["MENU RECIPES SUMMARY & COST ANALYSIS"],
+          ["Export Date:", new Date().toLocaleDateString()],
+          [],
+          ["#", "Recipe Name", "Food Category", "Currency", "Food Cost", "Actual Selling Price", "Price Mode", "Actual FC %", "Gross Margin"]
+        ];
+
+        recipes.forEach((r, idx) => {
+          const subtotal = (r.ingredients || []).reduce((s, i) => s + (parseNumeric(i.qty) * parseNumeric(i.unitPrice)), 0);
+          const qFactorCost = subtotal * (parseNumeric(r.qFactor) / 100);
+          const totalFoodCost = subtotal + qFactorCost;
+          const taxSvcMultiplier = getTaxSvcMultiplier(r);
+          
+          let actualNet = parseNumeric(r.projectedPrice);
+          if (r.priceMode === 'gross') {
+            actualNet = taxSvcMultiplier > 0 ? (r.projectedPrice / taxSvcMultiplier) : r.projectedPrice;
+          }
+          
+          const actualFcPct = actualNet > 0 ? ((totalFoodCost / actualNet) * 100) : 0;
+          const grossMargin = actualNet - totalFoodCost;
+
+          summaryRows.push([
+            idx + 1,
+            r.name || 'Untitled Recipe',
+            r.category || 'Main Course',
+            r.currency || currentCurrency,
+            totalFoodCost,
+            parseNumeric(r.projectedPrice),
+            (r.priceMode || 'gross').toUpperCase(),
+            actualFcPct.toFixed(2) + "%",
+            grossMargin
+          ]);
+        });
+
+        const summaryWs = XLSX.utils.aoa_to_sheet(summaryRows);
+        XLSX.utils.book_append_sheet(wb, summaryWs, "Menu Summary");
+
+        // 2. Add Active Recipe Sheet with Detailed Breakdown & Category Included
+        const activeRec = getActiveRecipe();
+        const subtotal = activeRec.ingredients.reduce((s, i) => s + (parseNumeric(i.qty) * parseNumeric(i.unitPrice)), 0);
+        const qFactorCost = subtotal * (parseNumeric(activeRec.qFactor) / 100);
         const totalFoodCost = subtotal + qFactorCost;
-        const preliminaryPriceNet = recipe.targetFc > 0 ? (totalFoodCost / (recipe.targetFc / 100)) : 0;
-        
-        const taxSvcMultiplier = getTaxSvcMultiplier(recipe);
+        const preliminaryPriceNet = activeRec.targetFc > 0 ? (totalFoodCost / (activeRec.targetFc / 100)) : 0;
+        const taxSvcMultiplier = getTaxSvcMultiplier(activeRec);
         const preliminaryPriceGross = preliminaryPriceNet * taxSvcMultiplier;
 
         let actualNetPrice = 0;
         let actualGrossPrice = 0;
-        if (recipe.priceMode === 'gross') {
-          actualGrossPrice = parseNumeric(recipe.projectedPrice);
+        if (activeRec.priceMode === 'gross') {
+          actualGrossPrice = parseNumeric(activeRec.projectedPrice);
           actualNetPrice = taxSvcMultiplier > 0 ? (actualGrossPrice / taxSvcMultiplier) : actualGrossPrice;
         } else {
-          actualNetPrice = parseNumeric(recipe.projectedPrice);
+          actualNetPrice = parseNumeric(activeRec.projectedPrice);
           actualGrossPrice = actualNetPrice * taxSvcMultiplier;
         }
 
         const actualFcPct = actualNetPrice > 0 ? ((totalFoodCost / actualNetPrice) * 100) : 0;
         const grossMargin = actualNetPrice - totalFoodCost;
 
-        const excelData = [
-          ["Recipe Card:", recipe.name],
-          ["Category:", recipe.category || "Main Course"],
-          ["Description:", recipe.description],
-          ["Currency:", currentCurrency],
+        const recipeExcelData = [
+          ["Recipe Card:", activeRec.name],
+          ["Food Category:", activeRec.category || "Main Course"],
+          ["Description:", activeRec.description || ""],
+          ["Currency:", activeRec.currency || currentCurrency],
           [],
           ["#", "Ingredient Name", "Quantity", "Unit", "Unit Price", "Total Price"],
-          ...recipe.ingredients.map((ing, idx) => [
+          ...activeRec.ingredients.map((ing, idx) => [
             idx + 1,
             ing.name,
             parseNumeric(ing.qty),
@@ -2433,27 +2489,30 @@ function doPost(e) {
           ]),
           [],
           ["Subtotal Ingredients:", "", "", "", "", subtotal],
-          [`Q-Factor (${recipe.qFactor}%):`, "", "", "", "", qFactorCost],
+          [`Q-Factor (${activeRec.qFactor}%):`, "", "", "", "", qFactorCost],
           ["Total Food Cost:", "", "", "", "", totalFoodCost],
+          ["Food Category:", "", "", "", "", activeRec.category || "Main Course"],
+          [`Target Food Cost %:`, "", "", "", "", (activeRec.targetFc || 0) + "%"],
           [`Recommended Price (Net):`, "", "", "", "", preliminaryPriceNet],
-          [`Service Charge (${recipe.servicePercent}%):`, "", "", "", "", preliminaryPriceNet * (recipe.servicePercent / 100)],
-          [`Government Tax (${recipe.taxPercent}%):`, "", "", "", "", (preliminaryPriceNet * (1 + recipe.servicePercent / 100)) * (recipe.taxPercent / 100)],
-          ["Tax Method:", "", "", "", "", recipe.taxMethod || "compounded"],
+          [`Service Charge (${activeRec.servicePercent}%):`, "", "", "", "", preliminaryPriceNet * (activeRec.servicePercent / 100)],
+          [`Government Tax (${activeRec.taxPercent}%):`, "", "", "", "", (preliminaryPriceNet * (1 + activeRec.servicePercent / 100)) * (activeRec.taxPercent / 100)],
+          ["Tax Method:", "", "", "", "", activeRec.taxMethod || "compounded"],
           ["Recommended Selling Price (Gross Inc. Tax/Svc):", "", "", "", "", preliminaryPriceGross],
           [],
-          [`Actual Menu Price (${(recipe.priceMode || 'gross').toUpperCase()}):`, "", "", "", "", recipe.projectedPrice],
+          [`Actual Menu Price (${(activeRec.priceMode || 'gross').toUpperCase()}):`, "", "", "", "", activeRec.projectedPrice],
           ["Actual Net Sales Revenue:", "", "", "", "", actualNetPrice],
           ["Actual Gross Customer Price:", "", "", "", "", actualGrossPrice],
           ["Actual Food Cost % (on Net Revenue):", "", "", "", "", actualFcPct.toFixed(2) + "%"],
           ["Gross Margin / Net Profit:", "", "", "", "", grossMargin]
         ];
 
-        const ws = XLSX.utils.aoa_to_sheet(excelData);
-        const wb = XLSX.utils.book_new();
-        XLSX.utils.book_append_sheet(wb, ws, "Recipe Costing");
+        const recipeWs = XLSX.utils.aoa_to_sheet(recipeExcelData);
+        const cleanSheetName = (activeRec.name || 'Recipe').replace(/[:\\/?*\[\]]/g, "_").substring(0, 25);
+        XLSX.utils.book_append_sheet(wb, recipeWs, cleanSheetName);
 
-        XLSX.writeFile(wb, `${recipe.name.replace(/[^a-z0-9]/gi, '_')}_FoodCost.xlsx`);
-        showToast("Excel Exported", `"${recipe.name}" saved as Excel spreadsheet.`, "success", 3000);
+        const fileName = `${activeRec.name.replace(/[^a-z0-9]/gi, '_')}_${(activeRec.category || 'MainCourse').replace(/[^a-z0-9]/gi, '_')}_FoodCost.xlsx`;
+        XLSX.writeFile(wb, fileName);
+        showToast("Excel Exported", `Saved "${activeRec.name}" [${activeRec.category || 'Main Course'}] & Menu Summary to Excel.`, "success", 3500);
       } catch(err) {
         showToast("Export Error", "Failed to generate Excel file: " + err.message, "error", 4000);
       }
